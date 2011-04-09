@@ -2,7 +2,18 @@
 var ydn_key    = 'dj0yJmk9RThaWnp2bU5yQThKJmQ9WVdrOWIySlpUVkZSTm1VbWNHbzlNVFF5TmpFd05UWXkmcz1jb25zdW1lcnNlY3JldCZ4PTZi';
     ydn_secret = '7fd54a9aeed99c98b699a8b326e51f034d8bd375',
     SERVER     = 'ps48174.dreamhostps.com',
+    cookie     = 'fbs_166824393371670',
     PORT       = 8081;
+
+function GGGetsize() {
+    if(((thesize=document.getElementById('CCContent').offsetHeight) > 0)&&((footerheight=document.getElementById('FFFooter').offsetHeight) > 0)) {
+            document.getElementsByTagName('body')[0].style.maxHeight = thesize+footerheight+'px';
+            document.getElementById('CCContent').className='FFForcontent';
+
+    } else {
+        setTimeout("GGGetsize()",10);
+    }
+}
 
 YUI({ filter: '' }).use('yui', function (Y) {
 
@@ -23,7 +34,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
         'node-event-simulate', 
         'overlay', 
         'async-queue', 
-        'cookie', 
+        'cookie',
         'yql',
         'gallery-oauth',
         function(Y) {
@@ -53,7 +64,16 @@ YUI({ filter: '' }).use('yui', function (Y) {
         script.type = 'text/javascript';
         script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
         Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
+        Y.on("domready", GGGetsize);
+        Y.on("domready", function() {
+            if (Y.config.win.top == Y.config.win.self) {
+                Y.one('body').append('<div id="FFFooter"><p>&nbsp;</p></div>');
+            }
+        });
 
+        var cookie_value = Y.Cookie.get(cookie);
+        console.log(cookie_value);
+/*
         Y.oAuth.ready(function() {
             Y.YQL('select * from social.contacts where guid=me;', function(r) {
                 //Do something here.
@@ -67,6 +87,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                 base: '://query.yahooapis.com/v1/yql?'
             }
         });
+*/
         
         // Wait for socket.io to show up
         (function getSocket() {

@@ -1,8 +1,94 @@
 /*jslint plusplus: false */
+var fb_app_id     = '166824393371670';
+var fb_cookie     = 'fbs_' + fb_app_id;
+var fb_app_secret = 'accb35fd6f8c613931f6ab0df9295d37';
+var fb_access_token, fb_access_token_expires;
+var hostname      = 'ps48174.dreamhostps.com:8081';
+var querystring = require('querystring');
+var URL = require('url');
+var http = require('http');
+var https = require('https');
+
+function http_request(cb, url, method) {
+
+    var url_data = URL.parse(url)
+        ,port = url_data.port || 80
+        ,secure = url_data.protocol == 'https:'
+        ,data = '';
+
+    if (port == 80 && secure) {
+        port = 443;
+    }
+    method = method || 'GET';
+
+    var options = {
+        host: url_data.hostname,
+        port: port,
+        path: url_data.pathname,
+        method: method
+    };
+
+    if (url_data.search) {
+        options.path += url_data.search;
+    }
+
+    var base = secure ? https : http;
+
+    var req = base.request(options, function(res) {
+        res.on('data', function(d) {
+            data += d;
+        });
+        res.on('end', function(d) {
+            cb(data);
+        });
+    });
+    req.end();
+}
 
 var Connect = require('connect'), server = Connect.createServer(
         Connect.logger() // Log responses to the terminal using Common Log Format.
+        ,Connect.favicon()
+        ,Connect.cookieParser()
         ,Connect.static('/home/trostler/server/static') // Serve all static files in the current dir.
+        ,Connect.router(function(app){
+            app.get('/login', function(req, res, next){
+                var info = URL.parse(req.url, true);
+                if (!info.query.code) {
+                    var qs = querystring.stringify(
+                        {
+                            redirect_uri : 'http://' + hostname + '/login',
+                            client_id    : fb_app_id
+                        }
+                    );
+                    var dialog_url = "http://www.facebook.com/dialog/oauth?" + qs;
+                    var body = "<script>top.location.href='" + dialog_url + "'</script>";
+                    res.writeHead(200, {
+                          'Content-Length': body.length,
+                          'Content-Type': 'text/html'
+                    });
+                    res.end(body, 'utf8');
+                } else {
+                    var qs = querystring.stringify(
+                        {
+                            redirect_uri : 'http://' + hostname + '/login',
+                            client_id    : fb_app_id,
+                            client_secret: fb_app_secret,
+                            code         : info.query.code
+                        }
+                    );
+                    var token_url = "https://graph.facebook.com/oauth/access_token?" + qs;
+                    http_request(function(qs) {
+                        var qs_obj              = querystring.parse(qs);
+                        fb_access_token         = qs_obj.access_token;
+                        fb_access_token_expires = qs_obj.expires;
+                        res.writeHead(200, {
+                          'Content-Type': 'text/html'
+                        });
+                        res.end('yer ready to go: ' + fb_access_token, 'utf8');
+                    } , token_url);
+                }
+            });
+        })
     ),
     io      = require('socket.io'), 
     socket  = io.listen(server),
@@ -22,30 +108,6 @@ function sendEvents(name, index, socketClient) {
         }
     });
 }
-
-/*
-function sendTrackerEvent(name, index, socketClient) {
-    rclient.lindex(name, index, function(error, event) {
-        var event_obj = JSON.parse(event);
-        if (!event_obj) {
-            console.log('BAD EVENT!');
-            console.log(event);
-            return;
-        }
-        event_obj.INDEX = index;
-        console.log('sending event: ' + event_obj.type + ' : ' + index);
-        socketClient.send({ event: 'event', data: event_obj });
-        rclient.lindex(name, ++index, function(error, next) {
-            var next_event_obj = JSON.parse(next);
-
-            if (next) {
-//                console.log('is next in: ' + (next_event_obj.timeStamp - event_obj.timeStamp));
-                setTimeout(sendTrackerEvent, next_event_obj.timeStamp - event_obj.timeStamp, name, index, socketClient);
-            }
-        });
-    });
-}
-*/
 
 var map = {
     startCapture: function(data) {
