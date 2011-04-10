@@ -8,8 +8,9 @@ var querystring = require('querystring');
 var URL = require('url');
 var http = require('http');
 var https = require('https');
+var fs = require('fs');
 
-function http_request(cb, url, method) {
+function http_request(cb, url, method, cookie) {
 
     var url_data = URL.parse(url)
         ,port = url_data.port || 80
@@ -25,7 +26,8 @@ function http_request(cb, url, method) {
         host: url_data.hostname,
         port: port,
         path: url_data.pathname,
-        method: method
+        method: method,
+        headers: { Cookie: cookie }
     };
 
     if (url_data.search) {
@@ -45,12 +47,55 @@ function http_request(cb, url, method) {
     req.end();
 }
 
+function getFBFriends(cb, token, uid) {
+    var url = 'https://graph.facebook.com/me/friends?' + token;
+    var cookie = 'c_user=' + uid;
+    console.log(token);
+    http_request(cb, url, 'GET', cookie);
+}
+
 var Connect = require('connect'), server = Connect.createServer(
         Connect.logger() // Log responses to the terminal using Common Log Format.
         ,Connect.favicon()
         ,Connect.cookieParser()
         ,Connect.static('/home/trostler/server/static') // Serve all static files in the current dir.
         ,Connect.router(function(app){
+            app.get('/tracker', function(req, res, next) {
+                var fb_app_id = '166824393371670',
+                    fb_cookie = 'fbs_' + fb_app_id;
+                if (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com/plugins') ||
+                        req.headers.referer.match('fbcdn.net/connect')) {
+                    // don't track us!
+                    res.writeHead(200, {
+                          'Content-Length': 0,
+                          'Content-Type': 'application/javascript'
+                    });
+                    res.end();
+                } else {
+                    if (!req.cookies[fb_cookie]) {
+                        // Login to FB ya bastardo
+                        var body = 'window.top.location="http://' + hostname + '/index.html";';
+                        res.writeHead(200, {
+                            'Content-Length': body.length,
+                            'Content-Type': 'text/html'
+                        });
+                        res.end(body, 'utf8');
+                    } else {
+                        var fb_cookie = querystring.parse(req.cookies[fb_cookie]);
+                        res.writeHead(200, {
+                            'Content-Type': 'application/javascript'
+                        });
+                        res.write('var FB_USER_ID = "' + fb_cookie.uid + '";', 'utf8');
+                        res.write('var FB_ACCESS  = "' + fb_cookie.access_token + '";', 'utf8');
+                        var tracker_js = fs.createReadStream('static/tracker.js');
+                        tracker_js.resume();
+                        tracker_js.pipe(res);
+
+                        getFBFriends(function(r) { console.log('FRIENDS: ' + r); }, fb_cookie.access_token);
+                    }
+                }
+            });
+            /*
             app.get('/login', function(req, res, next){
                 var info = URL.parse(req.url, true);
                 if (!info.query.code) {
@@ -88,6 +133,7 @@ var Connect = require('connect'), server = Connect.createServer(
                     } , token_url);
                 }
             });
+            */
         })
     ),
     io      = require('socket.io'), 
@@ -95,6 +141,8 @@ var Connect = require('connect'), server = Connect.createServer(
     redis   = require('redis'),
     rclient = redis.createClient(),
     bulk    = 100, subscriptions = {};
+
+server.fb_cookie = fb_cookie;
 
 function sendEvents(name, index, socketClient) {
     rclient.llen(name, function(error, length) {

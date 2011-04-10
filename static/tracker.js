@@ -2,16 +2,20 @@
 var ydn_key    = 'dj0yJmk9RThaWnp2bU5yQThKJmQ9WVdrOWIySlpUVkZSTm1VbWNHbzlNVFF5TmpFd05UWXkmcz1jb25zdW1lcnNlY3JldCZ4PTZi';
     ydn_secret = '7fd54a9aeed99c98b699a8b326e51f034d8bd375',
     SERVER     = 'ps48174.dreamhostps.com',
-    cookie     = 'fbs_166824393371670',
     PORT       = 8081;
 
 function GGGetsize() {
-    if(((thesize=document.getElementById('CCContent').offsetHeight) > 0)&&((footerheight=document.getElementById('FFFooter').offsetHeight) > 0)) {
-            document.getElementsByTagName('body')[0].style.maxHeight = thesize+footerheight+'px';
-            document.getElementById('CCContent').className='FFForcontent';
-
-    } else {
-        setTimeout("GGGetsize()",10);
+    var cccontent = document.getElementById('CCContent');
+    var fffooter  = document.getElementById('FFFooter');
+    if (cccontent && fffooter) {
+        var thesize      = cccontent.offsetHeight
+        var footerheight = fffooter.offsetHeight;
+        if(thesize > 0 && footerheight > 0) {
+            document.getElementsByTagName('body')[0].style.maxHeight = thesize + footerheight + 'px';
+            cccontent.className = 'FFForcontent';
+        } else {
+            setTimeout("GGGetsize()", 10);
+        }
     }
 }
 
@@ -71,8 +75,6 @@ YUI({ filter: '' }).use('yui', function (Y) {
             }
         });
 
-        var cookie_value = Y.Cookie.get(cookie);
-        console.log(cookie_value);
 /*
         Y.oAuth.ready(function() {
             Y.YQL('select * from social.contacts where guid=me;', function(r) {
