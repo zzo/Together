@@ -10,7 +10,7 @@ var http = require('http');
 var https = require('https');
 var fs = require('fs');
 
-function http_request(cb, url, method, cookie) {
+function http_request(cb, url, method) {
 
     var url_data = URL.parse(url)
         ,port = url_data.port || 80
@@ -26,13 +26,14 @@ function http_request(cb, url, method, cookie) {
         host: url_data.hostname,
         port: port,
         path: url_data.pathname,
-        method: method,
-        headers: { Cookie: cookie }
+        method: method
     };
 
     if (url_data.search) {
         options.path += url_data.search;
     }
+
+    console.log(options);
 
     var base = secure ? https : http;
 
@@ -47,11 +48,9 @@ function http_request(cb, url, method, cookie) {
     req.end();
 }
 
-function getFBFriends(cb, token, uid) {
-    var url = 'https://graph.facebook.com/me/friends?' + token;
-    var cookie = 'c_user=' + uid;
-    console.log(token);
-    http_request(cb, url, 'GET', cookie);
+function getFBFriends(cb, token) {
+    var url = 'https://graph.facebook.com/me/friends?access_token=' + token;
+    http_request(cb, url);
 }
 
 var Connect = require('connect'), server = Connect.createServer(
@@ -86,54 +85,28 @@ var Connect = require('connect'), server = Connect.createServer(
                             'Content-Type': 'application/javascript'
                         });
                         res.write('var FB_USER_ID = "' + fb_cookie.uid + '";', 'utf8');
-                        res.write('var FB_ACCESS  = "' + fb_cookie.access_token + '";', 'utf8');
+//                        res.write('var FB_ACCESS  = "' + fb_cookie.access_token + '";', 'utf8');
                         var tracker_js = fs.createReadStream('static/tracker.js');
                         tracker_js.resume();
                         tracker_js.pipe(res);
 
-                        getFBFriends(function(r) { console.log('FRIENDS: ' + r); }, fb_cookie.access_token);
+                        rclient.hset(fb_cookie.uid, 'token',         fb_cooke.access_token);
+                        rclient.hset(fb_cookie.uid, 'token_expires', fb_cookie.expires);
+                        rclient.sadd(users, 'token_expires', fb_cookie.uid);
+                        getFBFriends(
+                            function(r) { 
+                                var friends = JSON.parse(r).data; 
+                                friends.forEach(function(friend) {
+                                    rclient.sadd(fb.cookie.uid + '_friends', friend.id);
+                                    rclient.hset(friend.id, 'name', friend.name);
+                                });
+                            }, 
+                            fb_cookie.access_token
+                        );
+
                     }
                 }
             });
-            /*
-            app.get('/login', function(req, res, next){
-                var info = URL.parse(req.url, true);
-                if (!info.query.code) {
-                    var qs = querystring.stringify(
-                        {
-                            redirect_uri : 'http://' + hostname + '/login',
-                            client_id    : fb_app_id
-                        }
-                    );
-                    var dialog_url = "http://www.facebook.com/dialog/oauth?" + qs;
-                    var body = "<script>top.location.href='" + dialog_url + "'</script>";
-                    res.writeHead(200, {
-                          'Content-Length': body.length,
-                          'Content-Type': 'text/html'
-                    });
-                    res.end(body, 'utf8');
-                } else {
-                    var qs = querystring.stringify(
-                        {
-                            redirect_uri : 'http://' + hostname + '/login',
-                            client_id    : fb_app_id,
-                            client_secret: fb_app_secret,
-                            code         : info.query.code
-                        }
-                    );
-                    var token_url = "https://graph.facebook.com/oauth/access_token?" + qs;
-                    http_request(function(qs) {
-                        var qs_obj              = querystring.parse(qs);
-                        fb_access_token         = qs_obj.access_token;
-                        fb_access_token_expires = qs_obj.expires;
-                        res.writeHead(200, {
-                          'Content-Type': 'text/html'
-                        });
-                        res.end('yer ready to go: ' + fb_access_token, 'utf8');
-                    } , token_url);
-                }
-            });
-            */
         })
     ),
     io      = require('socket.io'), 
@@ -158,6 +131,19 @@ function sendEvents(name, index, socketClient) {
 }
 
 var map = {
+    keepAlive: function(data) {
+        var uid = data.uid;
+        rclient.hset(uid, 'title',     data.title);
+        rclient.hset(uid, 'href',      data.href);
+        rclient.hset(uid, 'timestamp', Math.round(Date.now()/1000));
+
+        // Check if token is expired
+        //
+        // find online friends - intersection of this user's friends & 'users'
+        rclient.sinter('users', uid + '_friends', function(error, set) {
+            console.log(set);
+        });
+    },
     startCapture: function(data) {
 //        console.log('starting to capture for: ' + data.name);
         rclient.sadd('tracker_sessions', data.name);
