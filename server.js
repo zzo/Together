@@ -62,8 +62,8 @@ var Connect = require('connect'), server = Connect.createServer(
             app.get('/tracker', function(req, res, next) {
                 var fb_app_id = '166824393371670',
                     fb_cookie = 'fbs_' + fb_app_id;
-                if (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com/plugins') ||
-                        req.headers.referer.match('fbcdn.net/connect')) {
+                if ((req.headers.referer && (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com/plugins') ||
+                        req.headers.referer.match('fbcdn.net/connect') || req.headers.referer.match('fbcdn.net')))) {
                     // don't track us!
                     res.writeHead(200, {
                           'Content-Length': 0,
@@ -86,13 +86,13 @@ var Connect = require('connect'), server = Connect.createServer(
                         });
                         res.write('var FB_USER_ID = "' + fb_cookie.uid + '";', 'utf8');
 //                        res.write('var FB_ACCESS  = "' + fb_cookie.access_token + '";', 'utf8');
-                        var tracker_js = fs.createReadStream('static/tracker.js');
+                        var tracker_js = fs.createReadStream('static/tracker2.js');
                         tracker_js.resume();
                         tracker_js.pipe(res);
 
-                        rclient.hset(fb_cookie.uid, 'token',         fb_cooke.access_token);
+                        rclient.hset(fb_cookie.uid, 'token',         fb_cookie.access_token);
                         rclient.hset(fb_cookie.uid, 'token_expires', fb_cookie.expires);
-                        rclient.sadd(users, 'token_expires', fb_cookie.uid);
+                        rclient.sadd('users', 'token_expires', fb_cookie.uid);
                         getFBFriends(
                             function(r) { 
                                 var friends = JSON.parse(r).data; 
@@ -131,17 +131,20 @@ function sendEvents(name, index, socketClient) {
 }
 
 var map = {
-    keepAlive: function(data) {
+    keepAlive: function(data, client) {
         var uid = data.uid;
         rclient.hset(uid, 'title',     data.title);
         rclient.hset(uid, 'href',      data.href);
         rclient.hset(uid, 'timestamp', Math.round(Date.now()/1000));
 
         // Check if token is expired
+        //  Am I following or leading anyone?
         //
         // find online friends - intersection of this user's friends & 'users'
         rclient.sinter('users', uid + '_friends', function(error, set) {
+                console.log('MY ONLINE FRIENDS');
             console.log(set);
+            //client.send({ event: 'hello', friends: set, following: false, leading: false  });
         });
     },
     startCapture: function(data) {
