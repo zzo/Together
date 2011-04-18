@@ -9,6 +9,7 @@ var URL = require('url');
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
+var sockets = {};
 
 function http_request(cb, url, method) {
 
@@ -131,24 +132,35 @@ function sendEvents(name, index, socketClient) {
 }
 
 var map = {
-    keepAlive: function(data, client) {
+    iamHere: function(data, socketClient) {
         var uid = data.uid;
         rclient.hset(uid, 'title',     data.title);
         rclient.hset(uid, 'href',      data.href);
         rclient.hset(uid, 'timestamp', Math.round(Date.now()/1000));
         rclient.sadd('users', uid);
 
+        sockets[uid] = socketClient;
+
         // Check if token is expired
         //  Am I following or leading anyone?
         //
         // find online friends - intersection of this user's friends & 'users'
-        rclient.sinter('users', uid + '_friends', function(error, set) {
-            var friends = [];
-            set.forEach(function(friend) {
-                friends.push({});
+
+        var myname = '';
+        rclient.hgetall(uid, function(error, me) {
+            rclient.sinter('users', uid + '_friends', function(error, set) {
+                set.forEach(function(err, friend) {
+                    rclient.hgetall(friend, function(err, friend_hash) {
+                        // back out to me
+                        socketClient.send({ event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend });
+
+                        // back out to my friend
+                        if (sockets[friend]) {
+                            sockets[friend].send({ event: 'friend', name: me.name, href: data.href, title: data.title, uid: data.uid });
+                        }
+                    });
+                });
             });
-            console.log(set);
-                socketClient.send({ event: 'events', data: events, start: index, end: events.length + index, name: name  });
         });
     },
     startCapture: function(data) {

@@ -73,7 +73,8 @@ YUI({ filter: '' }).use('yui', function (Y) {
         Y.on("domready", GGGetsize);
         Y.on("domready", function() {
             if (Y.config.win.top == Y.config.win.self) {
-                Y.one('body').append('<div id="FFFooter"><p>&nbsp;</p></div>');
+                Y.one('body').append('<div id="FFFooter"><div id="footpanel"><ul id="mainpanel"></ul></div></div>');
+                Y.one('#mainpanel').append('<li><a href="http://' + SERVER + ':' + PORT + '" class="home">Together</a></li>');
             }
         });
 
@@ -443,6 +444,9 @@ YUI({ filter: '' }).use('yui', function (Y) {
                             }
                     );
                     Y.TrackerDatatable.set('recordset', ds);
+                } else if (message.event === 'friend') {
+                    console.log('FRIEND: ');
+                    console.log(message);
                 }
             });
         });
@@ -454,11 +458,15 @@ YUI({ filter: '' }).use('yui', function (Y) {
 
             // Only send keepAlives for very top window
             if (Y.config.win.top == Y.config.win.self) {
+                socket.send({ event: 'iamHere', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
+//                Y.on('window:resize', );
+                /*
                 keepAliveTimer = Y.later(LOOP * 1000, this, 
                     function () { 
                         socket.send({ event: 'keepAlive', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
                     }, {}, true
                 );
+                */
             }
         });
 
