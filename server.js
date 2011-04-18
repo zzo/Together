@@ -59,10 +59,10 @@ var Connect = require('connect'), server = Connect.createServer(
         ,Connect.cookieParser()
         ,Connect.static('/home/trostler/server/static') // Serve all static files in the current dir.
         ,Connect.router(function(app){
-            app.get('/tracker', function(req, res, next) {
+            app.get('/together', function(req, res, next) {
                 var fb_app_id = '166824393371670',
                     fb_cookie = 'fbs_' + fb_app_id;
-                if ((req.headers.referer && (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com/plugins') ||
+                if ((!req.headers.referer || (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com/plugins') ||
                         req.headers.referer.match('fbcdn.net/connect') || req.headers.referer.match('fbcdn.net')))) {
                     // don't track us!
                     res.writeHead(200, {
@@ -70,7 +70,7 @@ var Connect = require('connect'), server = Connect.createServer(
                           'Content-Type': 'application/javascript'
                     });
                     res.end();
-                } else {
+                } else if (req.headers.referer) {
                     if (!req.cookies[fb_cookie]) {
                         // Login to FB ya bastardo
                         var body = 'window.top.location="http://' + hostname + '/index.html";';
@@ -92,19 +92,19 @@ var Connect = require('connect'), server = Connect.createServer(
 
                         rclient.hset(fb_cookie.uid, 'token',         fb_cookie.access_token);
                         rclient.hset(fb_cookie.uid, 'token_expires', fb_cookie.expires);
-                        rclient.sadd('users', 'token_expires', fb_cookie.uid);
+                        rclient.zadd('expires', fb_cookie.expires, fb_cookie.uid);
                         getFBFriends(
                             function(r) { 
                                 var friends = JSON.parse(r).data; 
                                 friends.forEach(function(friend) {
-                                    rclient.sadd(fb.cookie.uid + '_friends', friend.id);
+                                    rclient.sadd(fb_cookie.uid + '_friends', friend.id);
                                     rclient.hset(friend.id, 'name', friend.name);
                                 });
-                            }, 
-                            fb_cookie.access_token
+                            }
+                            ,fb_cookie.access_token
                         );
-
                     }
+                } else {
                 }
             });
         })
@@ -136,15 +136,19 @@ var map = {
         rclient.hset(uid, 'title',     data.title);
         rclient.hset(uid, 'href',      data.href);
         rclient.hset(uid, 'timestamp', Math.round(Date.now()/1000));
+        rclient.sadd('users', uid);
 
         // Check if token is expired
         //  Am I following or leading anyone?
         //
         // find online friends - intersection of this user's friends & 'users'
         rclient.sinter('users', uid + '_friends', function(error, set) {
-                console.log('MY ONLINE FRIENDS');
+            var friends = [];
+            set.forEach(function(friend) {
+                friends.push({});
+            });
             console.log(set);
-            //client.send({ event: 'hello', friends: set, following: false, leading: false  });
+                socketClient.send({ event: 'events', data: events, start: index, end: events.length + index, name: name  });
         });
     },
     startCapture: function(data) {

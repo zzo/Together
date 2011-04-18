@@ -10,6 +10,8 @@ function GGGetsize() {
     if (cccontent && fffooter) {
         var thesize      = cccontent.offsetHeight
         var footerheight = fffooter.offsetHeight;
+        console.log('footer height: ' + footerheight);
+        console.log('thesize height: ' + thesize);
         if(thesize > 0 && footerheight > 0) {
             document.getElementsByTagName('body')[0].style.maxHeight = thesize + footerheight + 'px';
             cccontent.className = 'FFForcontent';
@@ -449,11 +451,15 @@ YUI({ filter: '' }).use('yui', function (Y) {
         Y.on('socketHere', function() {
             // Send alive messages
             var LOOP = 30;  // check in every X  seconds
-            keepAliveTimer = Y.later(LOOP * 1000, this, 
-                function () { 
-                    socket.send({ event: 'keepAlive', uid: FB_USER_ID, href = Y.config.doc.win.location.href, title = Y.config.doc.title}); 
-                }, {}, true
-            );
+
+            // Only send keepAlives for very top window
+            if (Y.config.win.top == Y.config.win.self) {
+                keepAliveTimer = Y.later(LOOP * 1000, this, 
+                    function () { 
+                        socket.send({ event: 'keepAlive', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
+                    }, {}, true
+                );
+            }
         });
 
         var UI = '\
