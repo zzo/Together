@@ -1,25 +1,6 @@
 /*jslint plusplus: false */
-var ydn_key    = 'dj0yJmk9RThaWnp2bU5yQThKJmQ9WVdrOWIySlpUVkZSTm1VbWNHbzlNVFF5TmpFd05UWXkmcz1jb25zdW1lcnNlY3JldCZ4PTZi';
-    ydn_secret = '7fd54a9aeed99c98b699a8b326e51f034d8bd375',
-    SERVER     = 'ps48174.dreamhostps.com',
+var SERVER     = 'ps48174.dreamhostps.com',
     PORT       = 8081;
-
-function GGGetsize() {
-    var cccontent = document.getElementById('CCContent');
-    var fffooter  = document.getElementById('FFFooter');
-    if (cccontent && fffooter) {
-        var thesize      = cccontent.offsetHeight
-        var footerheight = fffooter.offsetHeight;
-        console.log('footer height: ' + footerheight);
-        console.log('thesize height: ' + thesize);
-        if(thesize > 0 && footerheight > 0) {
-            document.getElementsByTagName('body')[0].style.maxHeight = thesize + footerheight + 'px';
-            cccontent.className = 'FFForcontent';
-        } else {
-            setTimeout("GGGetsize()", 10);
-        }
-    }
-}
 
 YUI({ filter: '' }).use('yui', function (Y) {
 
@@ -32,21 +13,16 @@ YUI({ filter: '' }).use('yui', function (Y) {
         return pipeline.Get.script.apply(pipeline, arguments);
     };
 
-    Y.use('tabview', 
-        'dd-plugin', 
-        'datatable', 
-        'json', 
-        'selector-css3', 
-        'node-event-simulate', 
-        'overlay', 
-        'async-queue', 
-        'cookie',
-        'yql',
-        'gallery-oauth',
+    Y.use('json',
+        'selector-css3',
+        'node-event-simulate',
+        'event-delegate',
+        'event-mouseenter',
+        'overlay',
+        'async-queue',
         function(Y) {
 
-        var body = Y.one('body'), socket, TRACKER_QUEUE, TRACKER_CURSOR,
-            cookie_extra = { domain: 'yahoo.com', path: '/' },
+        var body = Y.one('body'), socket, TRACKER_QUEUE, TRACKER_CURSOR, friends = [],
             TRACKER_EVENTS = [
             'click',
             'dblclick',
@@ -64,17 +40,77 @@ YUI({ filter: '' }).use('yui', function (Y) {
             'resize',
             'scroll',
             'select'
-        ], TRACKER_INDEX, TRACKER_NAME, keepAliveTimer,
+        ], TRACKER_INDEX, TRACKER_NAME, keepAliveTimer, join_invite_overlay,
         script = Y.config.doc.createElement('script');
 
         script.type = 'text/javascript';
         script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
         Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
-        Y.on("domready", GGGetsize);
+
+        join_invite_overlay= new Y.Overlay({ zIndex: 9999, footerContent: '<h1><p><button id="join">JOIN</button>&nbsp;&nbsp;&nbsp;<button id="invite">INVITE</button></p></h1>' });
+        join_invite_overlay.render(body);
+        join_invite_overlay.hide();
+
         Y.on("domready", function() {
             if (Y.config.win.top == Y.config.win.self) {
-                Y.one('body').append('<div id="FFFooter"><div id="footpanel"><ul id="mainpanel"></ul></div></div>');
+                Y.one('body').append('<div id="footpanel"><ul id="mainpanel"></ul></div>');
                 Y.one('#mainpanel').append('<li><a href="http://' + SERVER + ':' + PORT + '" class="home">Together</a></li>');
+                var chatpanel = '<li id="chatpanel"><a href="#" class="chat">Friends (<strong id="friendCount" style="color: white">0</strong>)</a><div class="subpanel"><h3 id="friends_dash"><span> &ndash; </span>Friends Online</h3><ul id="friendList"></ul></div></li>';
+                Y.one('#mainpanel').append(chatpanel);
+                Y.on('window:resize', function(e) {
+                    adjustPanel(Y.one('#chatpanel'));
+                });
+                adjustPanel(Y.one('#chatpanel'));
+
+                //Click event on Chat Panel
+                Y.one("a.chat").on('click', function(e) {
+                    var tthis = e.target;
+                    if (tthis.hasClass('active')) { //If subpanel is already active...
+                        tthis.removeClass('active');
+                        tthis.next('.subpanel').hide();
+                    }
+                    else { //if subpanel is not active...
+                        tthis.addClass('active');
+                        tthis.next('.subpanel').setStyle('display', 'block');
+
+                    }
+                    return false;
+                });
+
+                //Click event outside of subpanel
+                Y.one('#friends_dash').on('click', function(e) { //Click anywhere and...
+                    var cp = Y.one('a.chat');
+                    cp.next(".subpanel").hide(); //hide subpanel
+                    cp.removeClass('active'); //remove active class on subpanel trigger
+                });
+
+                Y.one('#chatpanel').one('.subpanel ul').on('click', function(e) { 
+                    e.stopPropagation(); //Prevents the subpanel ul from closing on click
+                });
+
+                /*
+                Y.delegate('click', function(e) {
+                    Y.log("mouse click list item: " + e.currentTarget.get("id"));
+                }, '#friendList', 'li');
+                */
+
+                Y.delegate('mouseenter', function(e) {
+                    var uid = e.currentTarget.get('id');
+                    join_invite_overlay.set('headerContent', '<center><b>' + friends[uid].name + '</b></center>');
+                    join_invite_overlay.set('bodyContent', '<h3><b><center>' + friends[uid].title + '</b></center></h3>');
+                    join_invite_overlay.set('align', { node: e.currentTarget, points:[Y.WidgetPositionAlign.RC, Y.WidgetPositionAlign.LC] });
+                    join_invite_overlay.show();
+                }, '#friendList', 'li');
+
+                join_invite_overlay.get('boundingBox').on('mouseleave', function(e) {
+                    join_invite_overlay.hide();
+                });
+
+                Y.delegate('mouseleave', function(e) {
+                    if (!e.relatedTarget.hasClass('yui3-overlay') && !e.relatedTarget.hasClass('subpanel')) {
+                        join_invite_overlay.hide();
+                    }
+                }, '#friendList', 'li');
             }
         });
 
@@ -415,7 +451,6 @@ YUI({ filter: '' }).use('yui', function (Y) {
                             event_obj.INDEX = message.start + i;
                             TRACKER_INDEX   = event_obj.INDEX;
                             url             = event_obj.host;
-                            Y.Cookie.set("TRACKER_COOKIE", Y.JSON.stringify( { index: event_obj.INDEX, name: TRACKER_NAME, action: 'follow' } ), cookie_extra);
 
                             if (url !== URL) {
                                 Y.log('moving to: ' + url + '?tracker_name=' + message.name + '&tracker_action=follow&tracker_index=' + event_obj.INDEX);
@@ -445,8 +480,15 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     );
                     Y.TrackerDatatable.set('recordset', ds);
                 } else if (message.event === 'friend') {
-                    console.log('FRIEND: ');
-                    console.log(message);
+                    var friend_li = Y.one('#friendList').one('#' + message.uid);
+                    if (!friend_li) {
+                        friends[message.uid] = message;
+                        friend_li = Y.one('#friendList').append('<li id="' + message.uid + '"><a href="#"><img src="' + message.pic_url + '" alt="" />' + message.name + '</a></li>');
+                        var fc = Y.one('#friendCount').get('innerHTML');
+                        var nc = parseInt(fc, 10) + 1;
+                        Y.one('#friendCount').set('innerHTML', nc);
+                    }
+                    Y.log(message);
                 }
             });
         });
@@ -458,6 +500,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
 
             // Only send keepAlives for very top window
             if (Y.config.win.top == Y.config.win.self) {
+            console.log('SEND I AM HERE');
                 socket.send({ event: 'iamHere', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
 //                Y.on('window:resize', );
                 /*
@@ -470,6 +513,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
             }
         });
 
+        /*
         var UI = '\
 <div id="TRACKER_UI" class="yui3-skin-sam" style="background-color: #EDF5FF"> \
     <ul> \
@@ -484,6 +528,26 @@ YUI({ filter: '' }).use('yui', function (Y) {
     </div> \
 </div> \
 ', tabView = new Y.TabView({ srcNode: Y.Node.create(UI) });
+*/
 
     });
+
+    //Adjust panel height
+    function adjustPanel(node) {
+        node.all("ul, .subpanel").setStyles({ 'height' : 'auto'}); //Reset subpanel and ul height
+        
+        var windowHeight = node.get('winHeight');
+        var panelsub = node.one(".subpanel").get('height'); //Get the height of subpanel 
+        var panelAdjust = windowHeight - 100; //Viewport height - 100px (Sets max height of subpanel)
+        var ulAdjust =  panelAdjust - 25; //Calculate ul size after adjusting sub-panel (27px is the height of the base panel)
+        
+        if ( panelsub >= panelAdjust ) {     //If subpanel is taller than max height...
+            node.one(".subpanel").setStyles({ 'height' : panelAdjust }); //Adjust subpanel to max height
+            node.one("ul").setStyles({ 'height' : ulAdjust}); //Adjust subpanel ul to new size
+        }
+        else if ( panelsub < panelAdjust ) { //If subpanel is smaller than max height...
+            node.one("ul").setStyles({ 'height' : 'auto'}); //Set subpanel ul to auto (default size)
+        }
+    };
+
 });

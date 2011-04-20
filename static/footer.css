@@ -1,48 +1,4 @@
 html { height: 100%; }
-/*
-* {margin: 0; padding: 0; outline: none;}
-img {border: none;}
-
-body {
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
-    position: relative;
-}
-
-#WWWrapper {
-    height: 100%;
-    margin: 0;
-    overflow: scroll;
-    width: 100%;
-}
-
-#CCContent {
-    margin-bottom: 40px;
-}
-
-#FFFooter {
-    border-top: 3px solid black;
-    background-color: red;
-    bottom: 0;
-    height: 40px;
-    left: 0;
-    position: absolute;
-    right: 0;
-    z-index: 9999;
-}
-
-.FFForcontent {
-    position: absolute;
-    overflow: auto;
-    top: 0;
-    bottom: 0;
-    width: 100%;
-}
-    */
-
-/* ----------------------------------- */
-
 #footpanel {
     position: fixed;
     bottom: 0; left: 0;
@@ -53,6 +9,14 @@ body {
     border-bottom: none;
     width: 94%;
     margin: 0 3%;
+}
+
+.yui3-overlay {
+    background: #333232;
+    border: 2px solid #c3c3c3;
+    color: #eee;
+    width: 500px;
+    height: 400px;
 }
 
 *html #footpanel { /*--IE6 Hack - Fixed Positioning to the Bottom--*/
@@ -72,6 +36,7 @@ body {
 #footpanel ul li{
     padding: 0; margin: 0;
     float: left;
+    list-style: none;
     position: relative;
 }
 #footpanel ul li a{
@@ -83,9 +48,9 @@ body {
     color: #eee;
     position: relative;
 }
-html #footpanel ul li a:hover{  background-color: #111; }
+html #footpanel ul li a:hover{  background-color: #000; }
 html #footpanel ul li a.active { /*--Active state when subpanel is open--*/
-    background-color: #fff;
+    background-color: #aaa;
     height: 17px;
     margin-top: -2px; /*--Push it up 2px to attach the active button to subpanel--*/
     border: 1px solid #555;
@@ -94,7 +59,6 @@ html #footpanel ul li a.active { /*--Active state when subpanel is open--*/
     position: relative;
 }
 
-
 #footpanel a.home{  
     background: url(icons/icons/home.png) no-repeat 15px center;
     width: 60px;
@@ -102,13 +66,22 @@ html #footpanel ul li a.active { /*--Active state when subpanel is open--*/
     border-right: 1px solid #bbb;
     text-indent: 0; /*--Reset text indent--*/
 }
+
+#footpanel a.friend{  
+    background: url(icons/icons/user.png) no-repeat 15px center;
+    width: 100px;
+    padding-left: 40px;
+    border-right: 1px solid #bbb;
+    text-indent: 0; /*--Reset text indent--*/
+}
+
 a.profile{  background: url(icons/icons/user.png) no-repeat center center;  }
 a.contacts{ background: url(icons/icons/address_book.png) no-repeat center center; }
 a.playlist{ background: url(icons/icons/document_music_playlist.png) no-repeat center center; }
 a.videos{   background: url(icons/icons/film.png) no-repeat center center; }
 a.messages{ background: url(icons/icons/mail.png) no-repeat center center; }
 a.editprofile{  background: url(icons/icons/wrench_screwdriver.png) no-repeat center center; }
-#footpanel a.chat{  
+#footpanel a.chat{
     background: url(icons/icons/balloon.png) no-repeat 15px center;
     width: 126px;
     border-left: 1px solid #bbb;
@@ -120,7 +93,35 @@ a.alerts{   background: url(icons/icons/newspaper.png) no-repeat center center; 
 
 #footpanel li#chatpanel, #footpanel li#alertpanel { float: right; }  /*--Right align the chat and alert panels--*/
 
-#footpanel a small {  /*--panel tool tip styles--*/
+#friendList li div#foo {  /*--panel tool tip styles--*/
+    text-align: center;
+    width: 70px;
+    background: url(icons/icons/pop_arrow.gif) no-repeat center bottom;
+    padding: 5px 5px 11px;
+/*    display: none; --Hide by default--*/
+    color: #fff;
+    font-size: 1em;
+    text-indent: 0;
+
+    display: block; /*--Show on hover--*/
+    position: absolute;
+    left: -400px; /*--Position tooltip 35px above the list item--*/
+    top: 50%;
+    z-index: 9999;
+
+}
+
+#friendList li:hover div#foo {  /*--panel tool tip styles--*/
+    display: block; /*--Show on hover--*/
+    position: absolute;
+    left: -400px; /*--Position tooltip 35px above the list item--*/
+    top: 50%;
+/*    top: 50%; */
+/*    margin-top: -40px; --Center the tooltip--*/
+    z-index: 9999;
+}
+
+#footpanel li.profile small {  /*--panel tool tip styles--*/
     text-align: center;
     width: 70px;
     background: url(icons/icons/pop_arrow.gif) no-repeat center bottom;
@@ -130,7 +131,7 @@ a.alerts{   background: url(icons/icons/newspaper.png) no-repeat center center; 
     font-size: 1em;
     text-indent: 0;
 }
-#footpanel a:hover small{
+#footpanel li.profile:hover small{
     display: block; /*--Show on hover--*/
     position: absolute;
     top: -35px; /*--Position tooltip 35px above the list item--*/
@@ -153,7 +154,7 @@ a.alerts{   background: url(icons/icons/newspaper.png) no-repeat center center; 
 #footpanel .subpanel {
     position: absolute;
     left: 0; bottom: 27px;
-    display: none;  /*--Hide by default--*/
+    display: none;  /*--Hide by default--*/ 
     width: 198px;
     border: 1px solid #555;
     background: #fff;
@@ -235,3 +236,8 @@ a.alerts{   background: url(icons/icons/newspaper.png) no-repeat center center; 
     padding: 5px 10px 5px 0;
 }
 
+#join_invite {
+    display: none;
+    z-index: 9999;
+    position: absolute;
+}

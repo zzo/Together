@@ -149,10 +149,11 @@ var map = {
         var myname = '';
         rclient.hgetall(uid, function(error, me) {
             rclient.sinter('users', uid + '_friends', function(error, set) {
-                set.forEach(function(err, friend) {
+                set.forEach(function(friend) {
                     rclient.hgetall(friend, function(err, friend_hash) {
                         // back out to me
                         socketClient.send({ event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend });
+        console.log('sending friend: ' + friend_hash.name);
 
                         // back out to my friend
                         if (sockets[friend]) {
