@@ -47,9 +47,32 @@ YUI({ filter: '' }).use('yui', function (Y) {
         script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
         Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
 
-        join_invite_overlay= new Y.Overlay({ zIndex: 9999, footerContent: '<h1><p><button id="join">JOIN</button>&nbsp;&nbsp;&nbsp;<button id="invite">INVITE</button></p></h1>' });
+        join_invite_overlay = new Y.Overlay( { zIndex: 9999 });
         join_invite_overlay.render(body);
         join_invite_overlay.hide();
+
+        function hideFriendMenu() {
+            var cp = Y.one('a.chat');
+            cp.next(".subpanel").hide(); //hide subpanel
+            cp.removeClass('active'); //remove active class on subpanel trigger
+            join_invite_overlay.hide();
+        }
+
+        function showDialog(msg) {
+            hideFriendMenu();
+
+            join_invite_overlay.set('headerContent', '<center><b>Waiting...</b></center>');
+            join_invite_overlay.set('bodyContent',   '<h3><b><center>' + msg + '</b></center></h3>');
+            join_invite_overlay.set('footerContent', '<h3><b><center><button id="cancel_wait">Cancel</button></b></center></h3>');
+            join_invite_overlay.set('centered', true);
+            join_invite_overlay.show();
+
+            var cancelHandler = Y.one('#cancel_wait').on('click', function(e) {
+                socket.send({ event: 'cancel', me: FB_USER_ID });
+                cancelHandler.detach();
+                hideFriendMenu();
+            });
+        }
 
         Y.on("domready", function() {
             if (Y.config.win.top == Y.config.win.self) {
@@ -66,51 +89,60 @@ YUI({ filter: '' }).use('yui', function (Y) {
                 Y.one("a.chat").on('click', function(e) {
                     var tthis = e.target;
                     if (tthis.hasClass('active')) { //If subpanel is already active...
+                    /*
                         tthis.removeClass('active');
                         tthis.next('.subpanel').hide();
+                    */
+                        hideFriendMenu();
                     }
                     else { //if subpanel is not active...
                         tthis.addClass('active');
                         tthis.next('.subpanel').setStyle('display', 'block');
-
                     }
                     return false;
                 });
 
                 //Click event outside of subpanel
                 Y.one('#friends_dash').on('click', function(e) { //Click anywhere and...
-                    var cp = Y.one('a.chat');
-                    cp.next(".subpanel").hide(); //hide subpanel
-                    cp.removeClass('active'); //remove active class on subpanel trigger
+                    hideFriendMenu();
                 });
 
                 Y.one('#chatpanel').one('.subpanel ul').on('click', function(e) { 
                     e.stopPropagation(); //Prevents the subpanel ul from closing on click
                 });
 
-                /*
-                Y.delegate('click', function(e) {
-                    Y.log("mouse click list item: " + e.currentTarget.get("id"));
-                }, '#friendList', 'li');
-                */
-
                 Y.delegate('mouseenter', function(e) {
                     var uid = e.currentTarget.get('id');
                     join_invite_overlay.set('headerContent', '<center><b>' + friends[uid].name + '</b></center>');
                     join_invite_overlay.set('bodyContent', '<h3><b><center>' + friends[uid].title + '</b></center></h3>');
+                    join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="join">JOIN</button>&nbsp;&nbsp;&nbsp;<button id="invite">INVITE</button></p></h1></p>');
                     join_invite_overlay.set('align', { node: e.currentTarget, points:[Y.WidgetPositionAlign.RC, Y.WidgetPositionAlign.LC] });
+                    join_invite_overlay.set('centered', false);
                     join_invite_overlay.show();
+                    Y.one('#join').setData(uid);
+                    Y.one('#invite').setData(uid);
+
+                    Y.one('#join').on('click', function(e) {
+                        socket.send({ event: 'join', me: FB_USER_ID, them: e.target.getData() });
+                        showDialog('Waiting for join request');
+                    });
+
+                    Y.one('#invite').on('click', function(e) {
+                        socket.send({ event: 'invite', me: FB_USER_ID, them: e.target.getData() });
+                        showDialog('Waiting for invite request');
+                    });
                 }, '#friendList', 'li');
 
-                join_invite_overlay.get('boundingBox').on('mouseleave', function(e) {
-                    join_invite_overlay.hide();
-                });
-
                 Y.delegate('mouseleave', function(e) {
-                    if (!e.relatedTarget.hasClass('yui3-overlay') && !e.relatedTarget.hasClass('subpanel')) {
+                    if (!e.relatedTarget || !e.relatedTarget.hasClass('yui3-overlay') && !e.relatedTarget.hasClass('subpanel')) {
                         join_invite_overlay.hide();
                     }
                 }, '#friendList', 'li');
+
+                join_invite_overlay.get('boundingBox').on('mouseleave', function(e) {
+                    hideFriendMenu();
+                    //join_invite_overlay.hide();
+                });
             }
         });
 
@@ -480,15 +512,48 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     );
                     Y.TrackerDatatable.set('recordset', ds);
                 } else if (message.event === 'friend') {
-                    var friend_li = Y.one('#friendList').one('#' + message.uid);
-                    if (!friend_li) {
-                        friends[message.uid] = message;
-                        friend_li = Y.one('#friendList').append('<li id="' + message.uid + '"><a href="#"><img src="' + message.pic_url + '" alt="" />' + message.name + '</a></li>');
+                    var uid = message.uid;
+                    if (!Y.config.doc.getElementById(uid)) {
+                        friends[uid] = message;
+                        Y.one('#friendList').append('<li id="' + uid + '"><a href="#"><img src="' + message.pic_url + '" alt="" />' + message.name + '</a></li>');
                         var fc = Y.one('#friendCount').get('innerHTML');
                         var nc = parseInt(fc, 10) + 1;
                         Y.one('#friendCount').set('innerHTML', nc);
+                        adjustPanel(Y.one('#chatpanel'));
                     }
-                    Y.log(message);
+                } else if (message.event === 'join_request') {
+                    hideFriendMenu();
+
+                    join_invite_overlay.set('headerContent', '<center>Join Request</center>');
+                    join_invite_overlay.set('bodyContent',   '<center><b>' + message.name + ' wants to join you!</b></center>');
+                    join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="allow">ALLOW</button>&nbsp;&nbsp;&nbsp;<button id="deny">DENY</button></p></h1></p>');
+                    join_invite_overlay.set('centered', true);
+                    join_invite_overlay.show();
+
+                    Y.one('#allow').on('click', function(e) {
+                        socket.send({ event: 'join_response', me: FB_USER_ID, them: message.from, response: true }); 
+                        hideFriendMenu();
+                    });
+
+                    Y.one('#deny').on('click', function(e) {
+                        socket.send({ event: 'join_response', me: FB_USER_ID, them: message.from, response: false });
+                        hideFriendMenu();
+                    });
+                } else if (message.event === 'join_response') {
+                    hideFriendMenu();
+                    if (!message.response) {
+                        join_invite_overlay.set('headerContent', '<center>Join Response</center>');
+                        join_invite_overlay.set('bodyContent',   '<center><b>' + message.name + ' denied your join request</b></center>');
+                        join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="ttt_close">Close</button></p></h1></p>');
+                        join_invite_overlay.set('centered', true);
+                        join_invite_overlay.show();
+                    } else {
+                        console.log('JOIN EM');
+                    }
+
+                    Y.one('#ttt_close').on('click', function(e) {
+                        hideFriendMenu();
+                    });
                 }
             });
         });
@@ -496,20 +561,16 @@ YUI({ filter: '' }).use('yui', function (Y) {
         // Deal with UI
         Y.on('socketHere', function() {
             // Send alive messages
-            var LOOP = 30;  // check in every X  seconds
+            var LOOP = 10;  // check in every X seconds
 
             // Only send keepAlives for very top window
             if (Y.config.win.top == Y.config.win.self) {
-            console.log('SEND I AM HERE');
                 socket.send({ event: 'iamHere', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
-//                Y.on('window:resize', );
-                /*
                 keepAliveTimer = Y.later(LOOP * 1000, this, 
                     function () { 
-                        socket.send({ event: 'keepAlive', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
+                        socket.send({ event: 'iamHere', uid: FB_USER_ID, href: Y.config.win.location.href, title: Y.config.doc.title}); 
                     }, {}, true
                 );
-                */
             }
         });
 

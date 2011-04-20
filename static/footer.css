@@ -3,7 +3,6 @@ html { height: 100%; }
     position: fixed;
     bottom: 0; left: 0;
     z-index: 9999; /*--Keeps the panel on top of all other elements--*/
-/*    background: #e3e2e2; */
     background: #333232;
     border: 1px solid #c3c3c3;
     border-bottom: none;
@@ -13,10 +12,10 @@ html { height: 100%; }
 
 .yui3-overlay {
     background: #333232;
-    border: 2px solid #c3c3c3;
+    border: 3px solid #c3c3c3;
     color: #eee;
-    width: 500px;
-    height: 400px;
+    width: 450px;
+    height: 100px;
 }
 
 *html #footpanel { /*--IE6 Hack - Fixed Positioning to the Bottom--*/

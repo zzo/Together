@@ -132,12 +132,46 @@ function sendEvents(name, index, socketClient) {
 }
 
 var map = {
+    join: function(data, socketClient) {
+        var me = data.me, them = data.them;
+
+        if (sockets[them]) {
+            rclient.hgetall(me, function(error, me_hash) {
+                console.log('sending join_request to ' + them);
+                sockets[them].send({ event: 'join_request', from: me, name: me_hash.name });
+                rclient.hset(me,   'want_to_join', them);
+                rclient.hset(them, 'wants_to_join', me);
+            });
+        }
+    },
+    join_response: function(data, socketClient) {
+        var me = data.me, them = data.them, response = data.response;
+        rclient.hgetall(me, function(error, me_hash) {
+            rclient.hgetall(them, function(error, them_hash) {
+                /*
+                console.log('ME');
+                console.log(me_hash);
+                console.log('THEM');
+                console.log(them_hash);
+                */
+                if (them_hash.want_to_join == me && me_hash.wants_to_join == them) {
+                    rclient.hdel(me,   'wants_to_join');
+                    rclient.hdel(them, 'want_to_join');
+                    sockets[them].send({ event: 'join_response', from: me, name: me_hash.name, response: response });
+                }
+            });
+        });
+    },
+    invite: function(data, socketClient) {
+    },
     iamHere: function(data, socketClient) {
         var uid = data.uid;
         rclient.hset(uid, 'title',     data.title);
         rclient.hset(uid, 'href',      data.href);
         rclient.hset(uid, 'timestamp', Math.round(Date.now()/1000));
         rclient.sadd('users', uid);
+
+        console.log('I Am Here: ' + uid);
 
         sockets[uid] = socketClient;
 
@@ -153,7 +187,6 @@ var map = {
                     rclient.hgetall(friend, function(err, friend_hash) {
                         // back out to me
                         socketClient.send({ event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend });
-        console.log('sending friend: ' + friend_hash.name);
 
                         // back out to my friend
                         if (sockets[friend]) {
@@ -173,15 +206,16 @@ var map = {
 //        console.log('stopping to capture for: ' + data.name);
     },
     startFollow: function(data, socketClient) {
+        var uid = data.data.uid;
 //        console.log('starting to follow for: ' + data.name);
 //        sendTrackerEvent(data.name, data.index, socketClient);
-        sendEvents(data.name, data.index, socketClient);
-        console.log("" + socketClient);
-        if (!subscriptions[socketClient]) {
-            subscriptions[socketClient] = {};
+//        sendEvents(data.name, data.index, socketClient);
+        console.log('START FOLLOW: ' + uid);
+        if (!subscriptions[uid]) {
+            subscriptions[uid] = {};
         }
-        subscriptions[socketClient][data.name] = 1;
-        subscriptions[socketClient].client = socketClient;
+        subscriptions[uid][data.name] = 1;
+        subscriptions[uid].client = socketClient;
     },
     event: function(data) {
         var json_event = JSON.stringify(data.data), obj;
@@ -228,6 +262,7 @@ socket.on('connection', function(socketClient) {
             map[ev](data, socketClient);
         } else {
             console.log('I do not know event: ' + ev);
+            console.log(data);
         }
     });
 
