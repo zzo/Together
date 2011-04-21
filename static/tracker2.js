@@ -23,6 +23,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
         function(Y) {
 
         var body = Y.one('body'), socket, TRACKER_QUEUE, TRACKER_CURSOR, friends = [],
+            startedTogether = false,
             TRACKER_EVENTS = [
             'click',
             'dblclick',
@@ -291,7 +292,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     Y.log('sending:');
                     Y.log(ev);
                     */
-                    socket.send({ event: 'event', data: ev, name: Y.TrackStarted.name });
+                    socket.send({ event: 'event', data: ev, uid: FB_USER_ID });
 
                 } catch(E) {
                     Y.log('STRINGIFY FAILED!');
@@ -321,7 +322,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
             Y.one('#TRACKER_SHIM').setStyle('display', 'none');
         }
 
-        function startFollow(name, index) {
+        function startFollow() {
             if (!Y.one('#TRACKER_SHIM')) {
                 shim = Y.Node.create('<div id="TRACKER_SHIM"><img style="opacity: 1; z-index: 999009; position: absolute" id="TRACKER_CURSOR" src="http://' + SERVER + ':' + PORT + '/pointer_cursor.png"></img></div>');
 
@@ -360,10 +361,6 @@ YUI({ filter: '' }).use('yui', function (Y) {
 
             sizeShim();
             shim.setStyle('display', 'block');
-
-            TRACKER_NAME = name;
-
-            socket.send({ event: 'startFollow', name: name, index: index  });
         }
 
        function doEvent(event) {
@@ -460,67 +457,66 @@ YUI({ filter: '' }).use('yui', function (Y) {
 
         }
 
+        function startTogether() {
+            if (!startedTogether) {
+                startedTogether = true;
+                func = Y.config.win.addEventListener;
+                if (!func) {
+                    func = Y.config.win.attachEvent;
+                }
+                setUpEvents(func);
+            }
+        }
+
         Y.on('socketHere', function() {
             var obj, tname, taction, shim, bcolor, cookie_obj, tindex;
 
             socket.on('message', function(message) {
                 var event = message.data, i = 0, timeout = 0, event_obj, url, ds;
                 if (message.event === 'events') {
-                    if (Y.TrackerViewOnly) {
-                        ds = Y.TrackerEventView.get('recordset');
-                        // Can't add them all at once cuz we gotta de-JSON them - bummer
-                        for (; i < event.length; i++) {
-                            event_obj  = Y.JSON.parse(event[i]);
-                            url = event_obj.host;
-                            ds.add(event_obj);
-                        }
-                        Y.TrackerEventView.set('recordset', ds);
-                        Y.TrackerEventView.set('caption', message.name + ': ' + url);
-                    } else {
-                        Y.log('adding ' + event.length + ' events to queue!');
-                        for (; i < event.length; i++) {
-                            event_obj       = Y.JSON.parse(event[i]);
-                            event_obj.INDEX = message.start + i;
-                            TRACKER_INDEX   = event_obj.INDEX;
-                            url             = event_obj.host;
+                    if (!TRACKER_QUEUE) {
+                        startFollow();
+                    }
+                    Y.log('adding ' + event.length + ' events to queue!');
+                    for (; i < event.length; i++) {
+                        event_obj       = Y.JSON.parse(event[i]);
+                        event_obj.INDEX = message.start + i;
+                        TRACKER_INDEX   = event_obj.INDEX;
+                        url             = event_obj.host;
 
-                            if (url !== URL) {
-                                Y.log('moving to: ' + url + '?tracker_name=' + message.name + '&tracker_action=follow&tracker_index=' + event_obj.INDEX);
-                                Y.config.win.location = url + '?tracker_name=' + encodeURIComponent(message.name) + '&tracker_action=follow&tracker_index=' + event_obj.INDEX;
+                        if (Y.config.win.top == Y.config.win.self) {
+                            Y.log('AM AT: ' + Y.config.win.location);
+                            Y.log('URL AT: ' + url);
+                            if (url != Y.config.win.location) {
+                                Y.log('MOVING TO: ' + url);
+                                Y.config.win.location = url;
                             }
+                        }
+
+                        if (event.length === 1) {
+                            doEvent(event_obj);
+                        } else {
                             if (i > 0) {
                                 timeout = event_obj.timeStamp - Y.JSON.parse(event[i-1]).timeStamp;
                             }
-                            if (event.length === 1) {
-                                doEvent(event_obj);
-                            } else {
-                                TRACKER_QUEUE.add({ fn: doEvent, args: [ event_obj ], timeout: timeout });
-                            }
+                            TRACKER_QUEUE.add({ fn: doEvent, args: [ event_obj ], timeout: timeout });
                         }
-                        TRACKER_QUEUE.run();
                     }
-                } else if (message.event === 'info') {
-                    ds = Y.TrackerDatatable.get('recordset');
-                    ds.add(
-                            { 
-                                Name:   message.name, 
-                                Events: message.length, 
-                                URL:    '<a href="' + message.url + '?tracker_name=' + message.name + '&tracker_action=follow">' + message.url + '</a>', 
-                                View:   '<button name="' + message.name + '" action="startFollow">View</button>',
-                                Delete: '<button name="' + message.name + '" action="capDelete">Delete</button>'
-                            }
-                    );
-                    Y.TrackerDatatable.set('recordset', ds);
+                    TRACKER_QUEUE.run();
                 } else if (message.event === 'friend') {
                     var uid = message.uid;
+                    if (message.iamfollowing) {
+                        // see ya
+                        Y.config.win.location = message.href;
+                    }
                     if (!Y.config.doc.getElementById(uid)) {
-                        friends[uid] = message;
                         Y.one('#friendList').append('<li id="' + uid + '"><a href="#"><img src="' + message.pic_url + '" alt="" />' + message.name + '</a></li>');
                         var fc = Y.one('#friendCount').get('innerHTML');
                         var nc = parseInt(fc, 10) + 1;
                         Y.one('#friendCount').set('innerHTML', nc);
                         adjustPanel(Y.one('#chatpanel'));
-                    }
+                    } 
+                    friends[uid] = message;
                 } else if (message.event === 'join_request') {
                     hideFriendMenu();
 
@@ -533,6 +529,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     Y.one('#allow').on('click', function(e) {
                         socket.send({ event: 'join_response', me: FB_USER_ID, them: message.from, response: true }); 
                         hideFriendMenu();
+                       // startTogether();
                     });
 
                     Y.one('#deny').on('click', function(e) {
@@ -547,13 +544,14 @@ YUI({ filter: '' }).use('yui', function (Y) {
                         join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="ttt_close">Close</button></p></h1></p>');
                         join_invite_overlay.set('centered', true);
                         join_invite_overlay.show();
-                    } else {
-                        console.log('JOIN EM');
-                    }
 
-                    Y.one('#ttt_close').on('click', function(e) {
-                        hideFriendMenu();
-                    });
+                        Y.one('#ttt_close').on('click', function(e) {
+                            hideFriendMenu();
+                        });
+                    } 
+                } else if (message.event === 'follower') {
+                    startTogether();
+                    // message.uid = follower
                 }
             });
         });

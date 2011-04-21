@@ -158,6 +158,11 @@ var map = {
                     rclient.hdel(me,   'wants_to_join');
                     rclient.hdel(them, 'want_to_join');
                     sockets[them].send({ event: 'join_response', from: me, name: me_hash.name, response: response });
+                    if (response) {
+                        socketClient.send({ event: 'follower', uid: them });
+                        rclient.sadd(me + '_followers', them);
+                        rclient.hset(them, 'following', me);
+                    }
                 }
             });
         });
@@ -171,32 +176,48 @@ var map = {
         rclient.hset(uid, 'timestamp', Math.round(Date.now()/1000));
         rclient.sadd('users', uid);
 
-        console.log('I Am Here: ' + uid);
-
         sockets[uid] = socketClient;
 
         // Check if token is expired
         //  Am I following or leading anyone?
         //
         // find online friends - intersection of this user's friends & 'users'
-
-        var myname = '';
         rclient.hgetall(uid, function(error, me) {
             rclient.sinter('users', uid + '_friends', function(error, set) {
                 set.forEach(function(friend) {
                     rclient.hgetall(friend, function(err, friend_hash) {
-                        // back out to me
-                        socketClient.send({ event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend });
+                        // back out to me - my friend's status
+                        var msg = { event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend, following: friend_hash.following };
+                        if (me.following == friend) {
+                            // I am following this person!!
+                            msg.iamfollowing = true;
+                        }
+                        socketClient.send(msg);
 
-                        // back out to my friend
+                        // send my status out to my friends
                         if (sockets[friend]) {
-                            sockets[friend].send({ event: 'friend', name: me.name, href: data.href, title: data.title, uid: data.uid });
+                            msg = { event: 'friend', name: me.name, href: data.href, title: data.title, uid: data.uid, following: me.following };
+                            if (friend_hash.following == uid) {
+                                // They are following me!
+                                msg.iamfollowing = true;
+                            }
+                            sockets[friend].send(msg);
                         }
                     });
                 });
             });
         });
+
+        /*
+         * Tell me everyone following me
+         */
+        rclient.smembers(uid + '_followers', function(err, members) {
+            members.forEach(function(follower) {
+                socketClient.send({ event: 'follower', uid: follower });
+            });
+        });
     },
+             /*
     startCapture: function(data) {
 //        console.log('starting to capture for: ' + data.name);
         rclient.sadd('tracker_sessions', data.name);
@@ -214,19 +235,17 @@ var map = {
         if (!subscriptions[uid]) {
             subscriptions[uid] = {};
         }
-        subscriptions[uid][data.name] = 1;
+//        subscriptions[uid][data.name] = 1;
         subscriptions[uid].client = socketClient;
     },
+    */
     event: function(data) {
         var json_event = JSON.stringify(data.data), obj;
-        rclient.rpush(data.name, json_event);
-        rclient.llen(data.name, function(error, length) {
-            for (var client in subscriptions) {
-                obj = subscriptions[client];
-                if (obj[data.name]) {
-                    obj.client.send({ event: 'events', data: [ json_event ], name: data.name, start: length  });
-                }
-            }
+//        rclient.rpush(data.uid + '_events', json_event);
+        rclient.smembers(data.uid + '_followers', function(err, members) {
+            members.forEach(function(follower) {
+                sockets[follower].send({ event: 'events', data: [ json_event ], name: data.uid });
+            });
         });
     },
     getCaptures: function(data, socketClient) {
