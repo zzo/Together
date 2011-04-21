@@ -16,6 +16,7 @@ html { height: 100%; }
     color: #eee;
     width: 450px;
     height: 100px;
+    display: none;
 }
 
 *html #footpanel { /*--IE6 Hack - Fixed Positioning to the Bottom--*/

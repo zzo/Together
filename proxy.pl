@@ -24,7 +24,7 @@ $proxy->push_filter(
     mime     => 'text/html',
     response => HTTP::Proxy::BodyFilter::simple->new(
         sub {
-            ${ $_[1] } =~ s!<head(.*?)>!<head$1>$css!i;
+#            ${ $_[1] } =~ s!<head(.*?)>!<head$1>$css!i;
 #            ${ $_[1] } =~ s!<body(.*?)>!<body$1><div id="WWWrapper"><div id="CCContent">!i;
 #            ${ $_[1] } =~ s!</body>!</div></div>$INSERT</body>!i; 
             ${ $_[1] } =~ s!</body>!$INSERT</body>!i; 

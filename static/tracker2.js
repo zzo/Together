@@ -13,6 +13,10 @@ YUI({ filter: '' }).use('yui', function (Y) {
         return pipeline.Get.script.apply(pipeline, arguments);
     };
 
+    Y.Get.css = function() {
+        return pipeline.Get.css.apply(pipeline, arguments);
+    };
+
     Y.use('json',
         'selector-css3',
         'node-event-simulate',
@@ -43,20 +47,35 @@ YUI({ filter: '' }).use('yui', function (Y) {
             'select'
         ], TRACKER_INDEX, TRACKER_NAME, keepAliveTimer, join_invite_overlay,
         script = Y.config.doc.createElement('script');
-
         script.type = 'text/javascript';
         script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
         Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
 
-        join_invite_overlay = new Y.Overlay( { zIndex: 9999 });
-        join_invite_overlay.render(body);
-        join_invite_overlay.hide();
+        Y.Get.css(
+                'http://' + SERVER + ':' + PORT + '/footer.css', 
+                { 
+                    win: Y.config.win,
+                    onSuccess: function() {
+                        join_invite_overlay = new Y.Overlay( { zIndex: 9999 });
+                        join_invite_overlay.render(body);
+                        hideFriendMenu();
+                    }
+                }
+        );
 
         function hideFriendMenu() {
             var cp = Y.one('a.chat');
-            cp.next(".subpanel").hide(); //hide subpanel
-            cp.removeClass('active'); //remove active class on subpanel trigger
-            join_invite_overlay.hide();
+            if (cp) {
+                cp.next(".subpanel").hide(); //hide subpanel
+                cp.removeClass('active'); //remove active class on subpanel trigger
+            }
+//            join_invite_overlay.hide();
+            Y.one('.yui3-overlay').setStyle('display', 'none');
+        }
+
+        function showFriendMenu() {
+//            join_invite_overlay.show();
+            Y.one('.yui3-overlay').setStyle('display', 'block');
         }
 
         function showDialog(msg) {
@@ -66,7 +85,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
             join_invite_overlay.set('bodyContent',   '<h3><b><center>' + msg + '</b></center></h3>');
             join_invite_overlay.set('footerContent', '<h3><b><center><button id="cancel_wait">Cancel</button></b></center></h3>');
             join_invite_overlay.set('centered', true);
-            join_invite_overlay.show();
+            showFriendMenu();
 
             var cancelHandler = Y.one('#cancel_wait').on('click', function(e) {
                 socket.send({ event: 'cancel', me: FB_USER_ID });
@@ -119,7 +138,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="join">JOIN</button>&nbsp;&nbsp;&nbsp;<button id="invite">INVITE</button></p></h1></p>');
                     join_invite_overlay.set('align', { node: e.currentTarget, points:[Y.WidgetPositionAlign.RC, Y.WidgetPositionAlign.LC] });
                     join_invite_overlay.set('centered', false);
-                    join_invite_overlay.show();
+                    showFriendMenu();
                     Y.one('#join').setData(uid);
                     Y.one('#invite').setData(uid);
 
@@ -524,7 +543,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     join_invite_overlay.set('bodyContent',   '<center><b>' + message.name + ' wants to join you!</b></center>');
                     join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="allow">ALLOW</button>&nbsp;&nbsp;&nbsp;<button id="deny">DENY</button></p></h1></p>');
                     join_invite_overlay.set('centered', true);
-                    join_invite_overlay.show();
+                    showFriendMenu();
 
                     Y.one('#allow').on('click', function(e) {
                         socket.send({ event: 'join_response', me: FB_USER_ID, them: message.from, response: true }); 
@@ -543,7 +562,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                         join_invite_overlay.set('bodyContent',   '<center><b>' + message.name + ' denied your join request</b></center>');
                         join_invite_overlay.set('footerContent', '<p><h1 align="center"><p><button id="ttt_close">Close</button></p></h1></p>');
                         join_invite_overlay.set('centered', true);
-                        join_invite_overlay.show();
+                        showFriendMenu();
 
                         Y.one('#ttt_close').on('click', function(e) {
                             hideFriendMenu();
