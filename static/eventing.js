@@ -161,11 +161,12 @@ YUI().add('eventing', function(Y) {
             if (Y.config.win.removeEventListener) {
                 Y.config.win.removeEventListener(event, handleEvent, true);
             } else {
-                Y.config.win.detachEvent('on' + event, handleEvent);
+                Y.config.win.detachEvent('on' + event, handleEvent, true);
             }
         });
     }
 
+    Y.on('window:resize', sizeShim);
     function sizeShim() {
         var h = body.get('docHeight'), w = body.get('docWidth'), shim = Y.one('#TRACKER_SHIM');
         shim.setStyles({
@@ -203,7 +204,6 @@ YUI().add('eventing', function(Y) {
                 left:            '0px',
                 borderWidth:     '0 0 0 2px !important'
             });
-            Y.on('window:resize', sizeShim);
             body.append(shim);
             TRACKER_CURSOR = Y.one('#TRACKER_CURSOR');
         }
@@ -313,18 +313,55 @@ YUI().add('eventing', function(Y) {
 
     }
 
-    Y.Global.on('start_together', function() {
+    function startCapture() {
         if (!eventCapture) {
             eventCapture = true;
             setUpEvents();
         }
-    });
+    }
 
-    Y.Global.on('stop_together', function() {
+    function stopCapture() {
         if (eventCapture) {
             eventCapture = false;
-            tearDownEvents(func);
+            tearDownEvents();
+        }
+    }
+
+    Y.Global.on('events', function(message) {
+        if (message.event === 'events') {
+            var event = message.data, i = 0, timeout = 0, event_obj, url;
+            if (!TRACKER_QUEUE) {
+                startFollow();
+            }
+            Y.log('adding ' + event.length + ' events to queue!');
+            for (; i < event.length; i++) {
+                event_obj       = Y.JSON.parse(event[i]);
+                event_obj.INDEX = message.start + i;
+                TRACKER_INDEX   = event_obj.INDEX;
+                url             = event_obj.host;
+
+                if (Y.config.win.top == Y.config.win.self) {
+                    if (url != Y.config.win.location) {
+                        Y.config.win.location = url;
+                    }
+                }
+
+                if (event.length === 1) {
+                    doEvent(event_obj);
+                } else {
+                    if (i > 0) {
+                        timeout = event_obj.timeStamp - Y.JSON.parse(event[i-1]).timeStamp;
+                    }
+                    TRACKER_QUEUE.add({ fn: doEvent, args: [ event_obj ], timeout: timeout });
+                }
+            }
+            TRACKER_QUEUE.run();
+        } else if (message.event === 'follower') {
+            startCapture();
+        } else if (message.event === 'stopCapture') {
+            stopCapture();
+        } else if (message.event === 'stopFollow') {
+            stopFollow();
         }
     });
-
 }, '1.0', { requires: [ 'json', 'selector-css3', 'node-event-simulate', 'event-delegate', 'async-queue'] } );
