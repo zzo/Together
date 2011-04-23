@@ -58,14 +58,16 @@ a.messages{ background: url(icons/icons/mail.png) no-repeat center center; }
     text-decoration: none;
 }
 
-#fpanel {
+#friendTable {
     z-index: 999;
     border: 2px solid white;
     background: #333232;
     color: white;
     position: absolute;
+    /*
     left: 200px;
     top: 200px;
-    width: 400px;
-    height: 300px;
+    */
+    width: 500px;
+    height: 400px;
 }

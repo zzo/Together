@@ -75,6 +75,15 @@ var Connect = require('connect'), server = Connect.createServer(
                     res.end("<h2>Thanks for registering!!  You're good to go - Surf The Web Together!!</h2>");
                 });
             });
+            app.get('/blank', function(req, res, next) {
+                    res.writeHead(200, {
+                          'Content-Length': 0,
+                          'Content-Type': 'application/javascript'
+                    });
+                    var tracker_js = fs.createReadStream('static/tracker2.js');
+                    tracker_js.resume();
+                    tracker_js.pipe(res);
+            });
             app.get('/together', function(req, res, next) {
                 // See if we already got an access token...
                 var fb_app_id = '166824393371670',
