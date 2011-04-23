@@ -1,4 +1,5 @@
 html { height: 100%; }
+
 #footpanel {
     position: fixed;
     bottom: 0; left: 0;
@@ -16,7 +17,6 @@ html { height: 100%; }
     color: #eee;
     width: 450px;
     height: 100px;
-    display: none;
 }
 
 *html #footpanel { /*--IE6 Hack - Fixed Positioning to the Bottom--*/
@@ -26,11 +26,11 @@ html { height: 100%; }
 }
 
 #footpanel ul {
-    padding: 0; margin: 0;
+    margin: 0;
     float: left;
     width: 100%;
     list-style: none;
-    border-top: 1px solid #fff; /*--Gives the bevel feel on the panel--*/
+    padding-top: 2px 0 0;
     font-size: 1.1em;
 }
 #footpanel ul li{
@@ -39,205 +39,33 @@ html { height: 100%; }
     list-style: none;
     position: relative;
 }
-#footpanel ul li a{
-    padding: 5px;
-    float: left;
-    text-indent: -9999px;
-    height: 16px; width: 16px;
-    text-decoration: none;
-    color: #eee;
-    position: relative;
-}
-html #footpanel ul li a:hover{  background-color: #000; }
-html #footpanel ul li a.active { /*--Active state when subpanel is open--*/
-    background-color: #aaa;
-    height: 17px;
-    margin-top: -2px; /*--Push it up 2px to attach the active button to subpanel--*/
-    border: 1px solid #555;
-    border-top: none;
-    z-index: 200; /*--Keeps the active area on top of the subpanel--*/
-    position: relative;
-}
-
-#footpanel a.home{  
-    background: url(icons/icons/home.png) no-repeat 15px center;
-    width: 60px;
-    padding-left: 40px;
-    border-right: 1px solid #bbb;
-    text-indent: 0; /*--Reset text indent--*/
-}
-
-#footpanel a.friend{  
-    background: url(icons/icons/user.png) no-repeat 15px center;
-    width: 100px;
-    padding-left: 40px;
-    border-right: 1px solid #bbb;
-    text-indent: 0; /*--Reset text indent--*/
-}
 
 a.profile{  background: url(icons/icons/user.png) no-repeat center center;  }
 a.contacts{ background: url(icons/icons/address_book.png) no-repeat center center; }
 a.playlist{ background: url(icons/icons/document_music_playlist.png) no-repeat center center; }
 a.videos{   background: url(icons/icons/film.png) no-repeat center center; }
 a.messages{ background: url(icons/icons/mail.png) no-repeat center center; }
-a.editprofile{  background: url(icons/icons/wrench_screwdriver.png) no-repeat center center; }
+
 #footpanel a.chat{
     background: url(icons/icons/balloon.png) no-repeat 15px center;
     width: 126px;
-    border-left: 1px solid #bbb;
-    border-right: 1px solid #bbb;
     padding-left: 40px;
     text-indent: 0; /*--Reset text indent--*/
 }
-a.alerts{   background: url(icons/icons/newspaper.png) no-repeat center center;  }
+#footpanel li#friendpanel, #footpanel li#followpanel { float: right; }  /*--Right align the chat and alert panels--*/
 
-#footpanel li#chatpanel, #footpanel li#alertpanel { float: right; }  /*--Right align the chat and alert panels--*/
-
-#friendList li div#foo {  /*--panel tool tip styles--*/
-    text-align: center;
-    width: 70px;
-    background: url(icons/icons/pop_arrow.gif) no-repeat center bottom;
-    padding: 5px 5px 11px;
-/*    display: none; --Hide by default--*/
-    color: #fff;
-    font-size: 1em;
-    text-indent: 0;
-
-    display: block; /*--Show on hover--*/
-    position: absolute;
-    left: -400px; /*--Position tooltip 35px above the list item--*/
-    top: 50%;
-    z-index: 9999;
-
-}
-
-#friendList li:hover div#foo {  /*--panel tool tip styles--*/
-    display: block; /*--Show on hover--*/
-    position: absolute;
-    left: -400px; /*--Position tooltip 35px above the list item--*/
-    top: 50%;
-/*    top: 50%; */
-/*    margin-top: -40px; --Center the tooltip--*/
-    z-index: 9999;
-}
-
-#footpanel li.profile small {  /*--panel tool tip styles--*/
-    text-align: center;
-    width: 70px;
-    background: url(icons/icons/pop_arrow.gif) no-repeat center bottom;
-    padding: 5px 5px 11px;
-    display: none; /*--Hide by default--*/
-    color: #fff;
-    font-size: 1em;
-    text-indent: 0;
-}
-#footpanel li.profile:hover small{
-    display: block; /*--Show on hover--*/
-    position: absolute;
-    top: -35px; /*--Position tooltip 35px above the list item--*/
-    left: 50%; 
-    margin-left: -40px; /*--Center the tooltip--*/
-    z-index: 9999;
-}
-
-#footpanel ul li div a { /*--Reset link style for subpanel links--*/
-    text-indent: 0;
-    width: auto;
-    height: auto;
-    padding: 0;
-    float: none;
-    color: #00629a;
-    position: static;
-}
-#footpanel ul li div a:hover {  text-decoration: underline; } /*--Reset link style for subpanel links--*/
-
-#footpanel .subpanel {
-    position: absolute;
-    left: 0; bottom: 27px;
-    display: none;  /*--Hide by default--*/ 
-    width: 198px;
-    border: 1px solid #555;
-    background: #fff;
-    overflow: hidden;
-    padding-bottom: 2px;
-}
-#footpanel h3 {
-    background: #526ea6;
-    padding: 5px 10px;
-    color: #fff;
-    font-size: 1.1em;
-    cursor: pointer;
-}
-#footpanel h3 span { 
-    font-size: 1.5em;
-    float: right;
-    line-height: 0.6em; 
-    font-weight: normal;
-}
-#footpanel .subpanel ul{
-    padding: 0; margin: 0;
-    background: #fff;
-    width: 100%;
-    overflow: auto;
-}
-#footpanel .subpanel li{ 
-    float: none; /*--Reset float--*/
-    display: block;
-    padding: 0; margin: 0;
-    overflow: hidden;
-    clear: both;
-    background: #fff;
-    position: static;  /*--Reset relative positioning--*/
-    font-size: 0.9em;
-}
-
-#chatpanel .subpanel li { background: url(icons/icons/dash.gif) repeat-x left center; } 
-#chatpanel .subpanel li span {
-    padding: 5px;
-    background: #fff;
-    color: #777;
-    float: left;
-}
-#chatpanel .subpanel li a img {
-    float: left;
-    margin: 0 5px;
-}
-#chatpanel .subpanel li a{
-    padding: 3px 0; margin: 0;
-    line-height: 22px;
-    height: 22px;
-    background: #fff;
-    display: block;
-}
-#chatpanel .subpanel li a:hover {
-    background: #3b5998;
-    color: #fff;
+#footpanel a:link, #footpanel a:visited {
     text-decoration: none;
 }
 
-
-#alertpanel .subpanel { right: 0; left: auto; /*--Reset left positioning and make it right positioned--*/ }
-#alertpanel .subpanel li {
-    border-top: 1px solid #f0f0f0;
-    display: block;
-}
-#alertpanel .subpanel li p {padding: 5px 10px;}
-#alertpanel .subpanel li a.delete{
-    background: url(icons/icons/delete_x.gif) no-repeat;
-    float: right;
-    width: 13px; height: 14px;
-    margin: 5px;
-    text-indent: -9999px;
-    visibility: hidden; /*--Hides by default but still takes up space (not completely gone like display:none;)--*/
-}
-#alertpanel .subpanel li a.delete:hover { background-position: left bottom; }
-#footpanel #alertpanel li.view {
-    text-align: right;
-    padding: 5px 10px 5px 0;
-}
-
-#join_invite {
-    display: none;
-    z-index: 9999;
+#fpanel {
+    z-index: 999;
+    border: 2px solid white;
+    background: #333232;
+    color: white;
     position: absolute;
+    left: 200px;
+    top: 200px;
+    width: 400px;
+    height: 300px;
 }

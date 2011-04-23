@@ -6,33 +6,77 @@
     <title>Together</title>
   </head>
   <body>
-    <h1>Together</h1>
-    <p><fb:login-button autologoutlink="true"></fb:login-button></p>
-    <p><fb:like></fb:like></p>
-    <image id="image"></image>
-    <div id="name"></div>
-
     <div id="fb-root"></div>
+    <script src="http://connect.facebook.net/en_US/all.js"></script>
     <script>
-      window.fbAsyncInit = function() {
-        FB.init({appId: '166824393371670', status: true, cookie: true, xfbml: true});
-         FB.api('/me', function(user) {
-           if(user != null) {
-              var image = document.getElementById('image');
-              image.src = 'http://graph.facebook.com/' + user.id + '/picture';
-              var name = document.getElementById('name');
-              name.innerHTML = user.name
-           }
-         });
-      };
-      (function() {
-        var e = document.createElement('script');
-        e.type = 'text/javascript';
-        e.src = document.location.protocol +
-          '//connect.facebook.net/en_US/all.js';
-        e.async = true;
-        document.getElementById('fb-root').appendChild(e);
-      }());
+function Get_Cookie( check_name ) {
+    // first we'll split this cookie up into name/value pairs
+    // note: document.cookie only returns name=value, not the other components
+    var a_all_cookies = document.cookie.split( ';' );
+    var a_temp_cookie = '';
+    var cookie_name = '';
+    var cookie_value = '';
+    var b_cookie_found = false; // set boolean t/f default f
+
+    for ( i = 0; i < a_all_cookies.length; i++ )
+    {
+        // now we'll split apart each name=value pair
+        a_temp_cookie = a_all_cookies[i].split( '=' );
+
+
+        // and trim left/right whitespace while we're at it
+        cookie_name = a_temp_cookie[0].replace(/^\s+|\s+$/g, '');
+
+        // if the extracted name matches passed check_name
+        if ( cookie_name == check_name )
+        {
+            b_cookie_found = true;
+            // we need to handle case where cookie has no value but exists (no = sign, that is):
+            if ( a_temp_cookie.length > 1 )
+            {
+                cookie_value = unescape( a_temp_cookie[1].replace(/^\s+|\s+$/g, '') );
+            }
+            // note that in cases where cookie is initialized but no value, null is returned
+            return cookie_value;
+            break;
+        }
+        a_temp_cookie = null;
+        cookie_name = '';
+    }
+    if ( !b_cookie_found )
+    {
+        return null;
+    }
+}
     </script>
+    <script>
+        var cookie = Get_Cookie('fbs_166824393371670');
+        FB.init({appId: '166824393371670', status: true, cookie: true, xfbml: true});
+        FB.getLoginStatus(function(response) {
+            if (response.session && cookie) {
+                // logged in and connected user, someone you know
+                    document.getElementById('login').innerHTML = 'Yer GTG!  Now go surf the web Together!';
+            } else {
+                // no user session available, someone you dont know
+                document.getElementById('login').innerHTML = '<button id="log">Log Into Facebook</button>';
+                var but = document.getElementById('log');
+                but.onclick = login;
+            }
+        });
+
+        function login() {
+            FB.login(function(response) {
+                console.log(response);
+                if (response.session) {
+                    document.getElementById('login').innerHTML = 'Sweet thanks!  Now go surf the web Together!';
+                } else {
+                    document.getElementById('login').innerHTML = 'Ok come back when yer ready!';
+                }
+            }, { perms: 'offline_access'});
+        }
+    </script>
+    <h1>Together</h1>
+    <div id="login"></div>
+  <!--  <fb:login-button>Login with Facebook</fb:login-button> -->
   </body>
 </html>

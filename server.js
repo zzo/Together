@@ -2,7 +2,6 @@
 var fb_app_id     = '166824393371670';
 var fb_cookie     = 'fbs_' + fb_app_id;
 var fb_app_secret = 'accb35fd6f8c613931f6ab0df9295d37';
-var fb_access_token, fb_access_token_expires;
 var hostname      = 'ps48174.dreamhostps.com:8081';
 var querystring = require('querystring');
 var URL = require('url');
@@ -60,11 +59,28 @@ var Connect = require('connect'), server = Connect.createServer(
         ,Connect.cookieParser()
         ,Connect.static('/home/trostler/server/static') // Serve all static files in the current dir.
         ,Connect.router(function(app){
+            app.post('/registered', function(req, res, next) {
+                var data = '';
+                req.setEncoding('utf8');
+                req.on('data', function(chunk) {
+                    data += chunk;
+                });
+                req.on('end', function() {
+                    var parts = data.split('.');
+                    var sig = new Buffer(parts[0], 'base64');
+                    var json = JSON.parse(new Buffer(parts[1], 'base64'));
+                    res.writeHead(200, {
+                          'Content-Type': 'text/html'
+                    });
+                    res.end("<h2>Thanks for registering!!  You're good to go - Surf The Web Together!!</h2>");
+                });
+            });
             app.get('/together', function(req, res, next) {
+                // See if we already got an access token...
                 var fb_app_id = '166824393371670',
                     fb_cookie = 'fbs_' + fb_app_id;
-                if ((!req.headers.referer || (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com/plugins') ||
-                        req.headers.referer.match('fbcdn.net/connect') || req.headers.referer.match('fbcdn.net')))) {
+                if ((!req.headers.referer || (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com') ||
+                        req.headers.referer.match('fbcdn.net')))) {
                     // don't track us!
                     res.writeHead(200, {
                           'Content-Length': 0,
@@ -73,7 +89,6 @@ var Connect = require('connect'), server = Connect.createServer(
                     res.end();
                 } else if (req.headers.referer) {
                     if (!req.cookies[fb_cookie]) {
-                        // Login to FB ya bastardo
                         var body = 'window.top.location="http://' + hostname + '/index.html";';
                         res.writeHead(200, {
                             'Content-Length': body.length,
@@ -86,26 +101,26 @@ var Connect = require('connect'), server = Connect.createServer(
                             'Content-Type': 'application/javascript'
                         });
                         res.write('var FB_USER_ID = "' + fb_cookie.uid + '";', 'utf8');
-//                        res.write('var FB_ACCESS  = "' + fb_cookie.access_token + '";', 'utf8');
                         var tracker_js = fs.createReadStream('static/tracker2.js');
                         tracker_js.resume();
                         tracker_js.pipe(res);
 
-                        rclient.hset(fb_cookie.uid, 'token',         fb_cookie.access_token);
-                        rclient.hset(fb_cookie.uid, 'token_expires', fb_cookie.expires);
-                        rclient.zadd('expires', fb_cookie.expires, fb_cookie.uid);
+                        rclient.hset(fb_cookie.uid, 'token', fb_cookie.access_token);
                         getFBFriends(
                             function(r) { 
                                 var friends = JSON.parse(r).data; 
-                                friends.forEach(function(friend) {
-                                    rclient.sadd(fb_cookie.uid + '_friends', friend.id);
-                                    rclient.hset(friend.id, 'name', friend.name);
-                                });
+                                if (typeof friends == 'object') {
+                                    friends.forEach(function(friend) {
+                                        rclient.sadd(fb_cookie.uid + '_friends', friend.id);
+                                        rclient.hset(friend.id, 'name', friend.name);
+                                    });
+                                }
                             }
                             ,fb_cookie.access_token
                         );
                     }
                 } else {
+                    console.log('WEIRDNESS!!');
                 }
             });
         })
@@ -188,19 +203,11 @@ var map = {
                     rclient.hgetall(friend, function(err, friend_hash) {
                         // back out to me - my friend's status
                         var msg = { event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend, following: friend_hash.following };
-                        if (me.following == friend) {
-                            // I am following this person!!
-                            msg.iamfollowing = true;
-                        }
                         socketClient.send(msg);
 
                         // send my status out to my friends
                         if (sockets[friend]) {
                             msg = { event: 'friend', name: me.name, href: data.href, title: data.title, uid: data.uid, following: me.following };
-                            if (friend_hash.following == uid) {
-                                // They are following me!
-                                msg.iamfollowing = true;
-                            }
                             sockets[friend].send(msg);
                         }
                     });

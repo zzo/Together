@@ -2,7 +2,11 @@
 
 use HTTP::Proxy qw(:log);
 use HTTP::Proxy::BodyFilter::simple;
+use HTTP::Proxy::BodyFilter::complete;
+use HTTP::Proxy::HeaderFilter::simple;
+use Data::Dumper;
 
+           # a simple User-Agent filter
 my $INSERT = <<END;
 <script>
 (function(d) {
@@ -24,13 +28,25 @@ $proxy->push_filter(
     mime     => 'text/html',
     response => HTTP::Proxy::BodyFilter::simple->new(
         sub {
+#            my ( $self, $dataref, $message, $protocol, $buffer ) = @_;
 #            ${ $_[1] } =~ s!<head(.*?)>!<head$1>$css!i;
-#            ${ $_[1] } =~ s!<body(.*?)>!<body$1><div id="WWWrapper"><div id="CCContent">!i;
-#            ${ $_[1] } =~ s!</body>!</div></div>$INSERT</body>!i; 
             ${ $_[1] } =~ s!</body>!$INSERT</body>!i; 
+            ${ $_[1] } =~ s!</head>!$css</head>!i; 
         }
     )
 );
+
+my $filter = HTTP::Proxy::HeaderFilter::simple->new(
+    sub { 
+            print Dumper($_[1]);
+
+        if ($_[1]->header('host') eq $hostname) {
+            print "Request for me!\n";
+            print Dumper($_[1]->header('cookie'));
+        }
+    }
+);
+#$proxy->push_filter( request => $filter );
 
 print "Ready to rumble on " . $proxy->host . ':' . $proxy->port . "\n";
 $proxy->start;

@@ -13,21 +13,18 @@ YUI({ filter: '' }).use('yui', function (Y) {
         return pipeline.Get.script.apply(pipeline, arguments);
     };
 
-    Y.Get.css = function() {
-        return pipeline.Get.css.apply(pipeline, arguments);
-    };
-
     Y.use('json',
         'selector-css3',
         'node-event-simulate',
         'event-delegate',
         'event-mouseenter',
         'overlay',
+        'node-menunav',
         'async-queue',
         function(Y) {
 
         var body = Y.one('body'), socket, TRACKER_QUEUE, TRACKER_CURSOR, friends = [],
-            startedTogether = false,
+            startedTogether = false, friendTable,
             TRACKER_EVENTS = [
             'click',
             'dblclick',
@@ -51,6 +48,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
         script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
         Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
 
+        /*
         Y.Get.css(
                 'http://' + SERVER + ':' + PORT + '/footer.css', 
                 { 
@@ -62,20 +60,28 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     }
                 }
         );
+        */
+
+                        join_invite_overlay = new Y.Overlay( { zIndex: 9999 });
+                        /*
+                        join_invite_overlay.render(body);
+                        */
+                        hideFriendMenu();
 
         function hideFriendMenu() {
-            var cp = Y.one('a.chat');
+            var cp = Y.all('a.chat');
             if (cp) {
-                cp.next(".subpanel").hide(); //hide subpanel
-                cp.removeClass('active'); //remove active class on subpanel trigger
+                cp.each(function(cc) {
+                 //   cc.next(".subpanel").hide(); //hide subpanel
+                  //  cc.removeClass('active'); //remove active class on subpanel trigger
+                });
             }
-//            join_invite_overlay.hide();
-            Y.one('.yui3-overlay').setStyle('display', 'none');
+ //           join_invite_overlay.hide();
         }
 
         function showFriendMenu() {
+//            Y.one('#friendpanel').one(".subpanel").show(); //show subpanel
 //            join_invite_overlay.show();
-            Y.one('.yui3-overlay').setStyle('display', 'block');
         }
 
         function showDialog(msg) {
@@ -94,42 +100,103 @@ YUI({ filter: '' }).use('yui', function (Y) {
             });
         }
 
+        function addFriend(message) {
+            var node = Y.config.doc.getElementById(message.uid);
+            if (!node) {
+                var li = '<li id="' + message.uid + '" class="yui3-menuitem"><a class="yui3-menuitem-content">' + message.name + '</a></li>';
+                Y.one('#friend_menu').append(li);
+
+                var fc = Y.one('#friendCount').get('innerHTML');
+                var nc = parseInt(fc, 10) + 1;
+                Y.one('#friendCount').set('innerHTML', nc);
+
+                size_friend_menu();
+            }
+        }
+
+        function size_friend_menu() {
+            var size = 0,
+                friend_menu = Y.one('#friend_menu'),
+                ch = friend_menu.all('li');
+
+            if (ch.size()) {
+                size = (ch.size() + 1) * ch.item(0).get('offsetHeight');
+            }
+
+            size -= 4;
+            friend_menu.setStyle('marginTop', -size);
+        }
+
         Y.on("domready", function() {
             if (Y.config.win.top == Y.config.win.self) {
-                Y.one('body').append('<div id="footpanel"><ul id="mainpanel"></ul></div>');
-                Y.one('#mainpanel').append('<li><a href="http://' + SERVER + ':' + PORT + '" class="home">Together</a></li>');
-                var chatpanel = '<li id="chatpanel"><a href="#" class="chat">Friends (<strong id="friendCount" style="color: white">0</strong>)</a><div class="subpanel"><h3 id="friends_dash"><span> &ndash; </span>Friends Online</h3><ul id="friendList"></ul></div></li>';
-                Y.one('#mainpanel').append(chatpanel);
+                //Y.one('body').append('<div id="footpanel"><ul id="mainpanel"></ul></div>');
+                body.append('<div id="footpanel"><ul id="mainpanel"></ul></div>');
+                body.append('<div id="fpanel"></div>');
+
+                Y.one('#mainpanel').append('<li><a href="http://' + SERVER + ':' + PORT + '" class="home" style="padding-right: 30px">Together</a></li>');
+
+                Y.on("contentready", function() {
+                    this.plug(Y.Plugin.NodeMenuNav);
+                    }, "#menu-1");
+
+                var zob = '<li style="margin-left: 0px; float: left"><div id="menu-1" class="yui3-menu yui3-menu-horizontal"><!-- Bounding box --> <div class="yui3-menu-content"><!-- Content box --> <ul id="zob"> <!-- Menu items --> </ul> </div> </div></li>';
+                Y.one('#mainpanel').append(zob);
+                Y.one('#zob').append('\
+                              <li id="friendpanel">\
+                                    <span id="forgood-label" class="yui3-menu-label">\
+                                        <a class="chat" style="color: white" href="#friends-menu">Friends (<span id="friendCount">0</span>)</a>\
+                                    </span>\
+                                    <div id="friends-menu" class="yui3-menu">\
+                                        <div class="yui3-menu-content">\
+                                            <ul style="border: 1p solid white; z-index: 9999; background-color: #333232;" id="friend_menu">\
+                                            </ul>\
+                                        </div>\
+                                    </div>\
+                                </li>');
+
+                var followpanel = '<li id="followpanel"><a href="#" class="chat">Followers (<strong id="followCount" style="color: white">0</strong>)</a><div class="subpanel"><h3 id="followers_dash"><span> &ndash; </span>Followers</h3><ul id="followerList"></ul></div></li>';
+//                Y.one('#mainpanel').append(followpanel);
+
+                var friendpanel = '<li id="friendpanel"><a href="#" class="chat">Friends (<strong id="friendCount" style="color: white">0</strong>)</a><div class="subpanel"><h3 id="friends_dash"><span> &ndash; </span>Friends Online</h3><ul id="friendList"></ul></div></li>';
+//                Y.one('#mainpanel').append(friendpanel);
+
+                /*
                 Y.on('window:resize', function(e) {
-                    adjustPanel(Y.one('#chatpanel'));
+                    adjustPanel(Y.one('#friendpanel'));
                 });
-                adjustPanel(Y.one('#chatpanel'));
+                adjustPanel(Y.one('#friendpanel'));
+                */
 
                 //Click event on Chat Panel
-                Y.one("a.chat").on('click', function(e) {
+                /*
+                Y.all("a.chat").on('click', function(e) {
                     var tthis = e.target;
                     if (tthis.hasClass('active')) { //If subpanel is already active...
-                    /*
                         tthis.removeClass('active');
                         tthis.next('.subpanel').hide();
-                    */
                         hideFriendMenu();
                     }
                     else { //if subpanel is not active...
                         tthis.addClass('active');
-                        tthis.next('.subpanel').setStyle('display', 'block');
+                        showFriendMenu();
+                        Y.log('SHOW FRIEND MENU!!');
                     }
                     return false;
                 });
+                */
 
                 //Click event outside of subpanel
+                /*
                 Y.one('#friends_dash').on('click', function(e) { //Click anywhere and...
                     hideFriendMenu();
                 });
+                */
 
-                Y.one('#chatpanel').one('.subpanel ul').on('click', function(e) { 
+                /*
+                Y.one('#friendpanel').one('.subpanel ul').on('click', function(e) { 
                     e.stopPropagation(); //Prevents the subpanel ul from closing on click
                 });
+                */
 
                 Y.delegate('mouseenter', function(e) {
                     var uid = e.currentTarget.get('id');
@@ -153,6 +220,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     });
                 }, '#friendList', 'li');
 
+                /*
                 Y.delegate('mouseleave', function(e) {
                     if (!e.relatedTarget || !e.relatedTarget.hasClass('yui3-overlay') && !e.relatedTarget.hasClass('subpanel')) {
                         join_invite_overlay.hide();
@@ -163,6 +231,7 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     hideFriendMenu();
                     //join_invite_overlay.hide();
                 });
+                */
             }
         });
 
@@ -488,6 +557,33 @@ YUI({ filter: '' }).use('yui', function (Y) {
         }
 
         Y.on('socketHere', function() {
+            if (Y.config.win.top == Y.config.win.self) {
+                YUI.Env.socket = socket;
+                YUI.Env.FB_USER_ID = FB_USER_ID;
+
+                createSandbox(Y.one('#fpanel'), 'http://' + SERVER + ':' + PORT + '/friendTable.js');
+
+                /*
+                var loader = Y.Env._loader;
+                var b = loader.addModule({
+                    name: 'friendTable',
+                    type: 'js', 
+                    fullpath: 'http://' + SERVER + ':' + PORT + '/userTable.js',
+                    requires: [ 'dd-drag', 'datatable', 'recordset-indexer' ]
+                }, 'friendTable');
+
+                Y.use('friendTable', function(Y) 
+                    { 
+                        friendTable = new Y.FriendTable(socket, FB_USER_ID, Y.one('#fpanel'));
+                        Y.log('loaded friend table');
+                        friendTable.show(); 
+                    }
+                );
+                */
+            }
+        });
+
+        Y.on('socketHere', function() {
             var obj, tname, taction, shim, bcolor, cookie_obj, tindex;
 
             socket.on('message', function(message) {
@@ -503,6 +599,8 @@ YUI({ filter: '' }).use('yui', function (Y) {
                         TRACKER_INDEX   = event_obj.INDEX;
                         url             = event_obj.host;
 
+                            Y.log('AM AT: ' + Y.config.win.location);
+                            Y.log('URL AT: ' + url);
                         if (Y.config.win.top == Y.config.win.self) {
                             Y.log('AM AT: ' + Y.config.win.location);
                             Y.log('URL AT: ' + url);
@@ -524,18 +622,17 @@ YUI({ filter: '' }).use('yui', function (Y) {
                     TRACKER_QUEUE.run();
                 } else if (message.event === 'friend') {
                     var uid = message.uid;
-                    if (message.iamfollowing) {
-                        // see ya
-                        Y.config.win.location = message.href;
-                    }
+                    friends[uid] = message;
+                    //addFriend(message);
+                    /*
                     if (!Y.config.doc.getElementById(uid)) {
                         Y.one('#friendList').append('<li id="' + uid + '"><a href="#"><img src="' + message.pic_url + '" alt="" />' + message.name + '</a></li>');
                         var fc = Y.one('#friendCount').get('innerHTML');
                         var nc = parseInt(fc, 10) + 1;
                         Y.one('#friendCount').set('innerHTML', nc);
-                        adjustPanel(Y.one('#chatpanel'));
+                        //adjustPanel(Y.one('#friendpanel'));
                     } 
-                    friends[uid] = message;
+                    */
                 } else if (message.event === 'join_request') {
                     hideFriendMenu();
 
@@ -590,24 +687,6 @@ YUI({ filter: '' }).use('yui', function (Y) {
                 );
             }
         });
-
-        /*
-        var UI = '\
-<div id="TRACKER_UI" class="yui3-skin-sam" style="background-color: #EDF5FF"> \
-    <ul> \
-        <li ><a href="#TRACKER_DIV_CAPTURE">Capture</a></li> \
-        <li><a href="#TRACKER_DIV_DATATABLE">Follow</a></li> \
-        <li><a href="#TRACKER_DIV_EVENT_DATATABLE">Events View</a></li> \
-    </ul> \
-    <div> \
-        <div id="TRACKER_DIV_CAPTURE"><label for="TRACKER_DIV_CAPTURE_NAME">Name</label><input type="textbox" id="TRACKER_DIV_CAPTURE_NAME" name="TRACKER_DIV_CAPTURE_NAME">&nbsp;<button type="button" id="TRACKER_DIV_CAPTURE_BUTTON"></button></div> \
-        <div id="TRACKER_DIV_DATATABLE"       style="height: 200px; overflow: scroll"></div> \
-        <div id="TRACKER_DIV_EVENT_DATATABLE" style="height: 200px; overflow: scroll"></div> \
-    </div> \
-</div> \
-', tabView = new Y.TabView({ srcNode: Y.Node.create(UI) });
-*/
-
     });
 
     //Adjust panel height
@@ -628,4 +707,28 @@ YUI({ filter: '' }).use('yui', function (Y) {
         }
     };
 
+     function createSandbox(node, js) {
+         var iframe = Y.Node.create('<iframe border="0" frameBorder="0" marginWidth="0" marginHeight="0" leftMargin="0" topMargin="0" allowTransparency="true" title="Online Friends">Online Friends</iframe>'),
+             DEFAULT_CSS = 'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css',
+             BODY= [
+                 "<body onload='", 
+                     'var d=document;d.getElementsByTagName("head")[0].appendChild(d.createElement("script")).src="',
+                         js,
+                     '";',
+                 "'><div></body>"
+             ].join(''),
+             // other static variables
+             META = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>',
+             STYLE = 'html{overflow:hidden;border:0;margin:0;padding:0;}',
+             html = '<!doctype html><html><head>' + META + '<link rel="stylesheet" type="text/css" href="' + DEFAULT_CSS + '"><style>' + STYLE + '</style></head>' + BODY + '</html>',
+             doc;
+ 
+         iframe.set('src', 'javascript' + ((Y.UA.ie) ? ':false' : ':') + ';');
+         // injecting the structure into the node wrapper
+         node.append( iframe );
+         // setting the content of the iframe
+         doc = iframe._node.contentWindow.document;
+         doc.open().write(html);
+         doc.close();
+     }
 });
