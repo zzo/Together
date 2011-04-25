@@ -24,8 +24,8 @@ END
 
 my $css = '<link rel="stylesheet" href="http://' . $hostname . '/footer.css" type="text/css" />';
 
-my $gzip = Compress::Zlib::memGzip($INSERT);
-my $gzip_css = Compress::Zlib::memGzip($css);
+my $gzip        = Compress::Zlib::memGzip($INSERT);
+my $gzip_css    = Compress::Zlib::memGzip($css);
 # init
 my $proxy = HTTP::Proxy->new( port => 8080, host => '', max_clients => 100 );
 $proxy->push_filter(
@@ -37,12 +37,17 @@ $proxy->push_filter(
             if ($$dataref) {
                 if ($contentEncoding eq 'gzip') {
                     $dest = Compress::Zlib::memGunzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
-                    $dest =~ s!</head>!$css</head>!i; 
-                    $$dataref = $dest . $INSERT;
+                    if ($dest =~ /head/ && $dest =~ /body./) {
+                        $dest =~ s!</head>!$css</head>!i; 
+                        $$dataref = $dest . $INSERT;
+                    }
                     $$dataref = Compress::Zlib::memGzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
                 } else {
-                    ${ $_[1] } =~ s!</head>!$css</head>!i;
-                    ${ $_[1] } =~ s#$#$INSERT#i;
+                    if ($$dataref =~ m!</head>! && $$dataref =~ m!<body!) {
+                        print "ADDING TO $$dataref\n";
+                        ${ $_[1] } =~ s!</head>!$css</head>!i;
+                        ${ $_[1] } =~ s#$#$INSERT#i;
+                    }
                 }
             }
         }
@@ -51,6 +56,8 @@ $proxy->push_filter(
 
 my $filter = HTTP::Proxy::HeaderFilter::simple->new(
     sub { 
+    print "RESPONSE HEADERS\n";
+    print Dumper($_[1]) . "\n";
             if ($_[1]->header('content-type') =~ m#text/html#i &&  $_[1]->header('content-encoding') =~ /gzip/) {
                 $_[1]->header('content-length', $_[1]->header('content-length') + length($gzip) + length($gzip_css));
                 $contentEncoding = 'gzip';

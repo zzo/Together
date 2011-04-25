@@ -57,33 +57,9 @@ var Connect = require('connect'), server = Connect.createServer(
         Connect.logger() // Log responses to the terminal using Common Log Format.
         ,Connect.favicon()
         ,Connect.cookieParser()
-        ,Connect.static('/home/trostler/server/static') // Serve all static files in the current dir.
+//        ,Connect.static('/home/trostler/server/static') // Serve all static files in the current dir.
+        ,Connect.static(__dirname + '/static') // Serve all static files in the current dir.
         ,Connect.router(function(app){
-            app.post('/registered', function(req, res, next) {
-                var data = '';
-                req.setEncoding('utf8');
-                req.on('data', function(chunk) {
-                    data += chunk;
-                });
-                req.on('end', function() {
-                    var parts = data.split('.');
-                    var sig = new Buffer(parts[0], 'base64');
-                    var json = JSON.parse(new Buffer(parts[1], 'base64'));
-                    res.writeHead(200, {
-                          'Content-Type': 'text/html'
-                    });
-                    res.end("<h2>Thanks for registering!!  You're good to go - Surf The Web Together!!</h2>");
-                });
-            });
-            app.get('/blank', function(req, res, next) {
-                    res.writeHead(200, {
-                          'Content-Length': 0,
-                          'Content-Type': 'application/javascript'
-                    });
-                    var tracker_js = fs.createReadStream('static/tracker2.js');
-                    tracker_js.resume();
-                    tracker_js.pipe(res);
-            });
             app.get('/together', function(req, res, next) {
                 // See if we already got an access token...
                 var fb_app_id = '166824393371670',
@@ -101,7 +77,7 @@ var Connect = require('connect'), server = Connect.createServer(
                         var body = 'window.top.location="http://' + hostname + '/index.html";';
                         res.writeHead(200, {
                             'Content-Length': body.length,
-                            'Content-Type': 'text/html'
+                            'Content-Type': 'application/javascript'
                         });
                         res.end(body, 'utf8');
                     } else {
@@ -110,7 +86,8 @@ var Connect = require('connect'), server = Connect.createServer(
                             'Content-Type': 'application/javascript'
                         });
                         res.write('var FB_USER_ID = "' + fb_cookie.uid + '";', 'utf8');
-                        var tracker_js = fs.createReadStream('static/tracker2.js');
+                        //var tracker_js = fs.createReadStream('static/tracker2.js');
+                        var tracker_js = fs.createReadStream('static/init.js');
                         tracker_js.resume();
                         tracker_js.pipe(res);
 
