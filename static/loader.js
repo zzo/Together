@@ -4,23 +4,28 @@ YUI().add('togetherLoader', function(Y) {
         { id: 'keepAlive',          file: 'keepAlive.js',                   requires: [ 'event-custom-base' ] },
         { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
         { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
-        { id: 'Tfootpanel',          file: 'footPanel.js',                  requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
+        { id: 'Tfootpanel',         file: 'footPanel.js',                   requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
           css: [ 
           'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css',
           '/footPanel.css'
           ]
         },
-        { id: 'friendTable',        file: 'userTable.js',                   requires: ['recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base' ],    class: 'FriendTable', createDiv: true, iframe: true,
-          css: 'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css'
+        { id: 'friendTable', file: 'friendTable.js', requires: ['recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ], class: 'FriendTable', createDiv: true, iframe: true,
+          css: [ 
+          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css',
+          '/userTable.css'
+          ]
         }
     ];
 
+//'width: 500px; height: 400px; position: absoulte;'
+//
     Y.TogetherLoader = function(config) {
         this.SERVER = config.server;
         this.PORT   = config.port;
 
         function createSandbox(node, css, modules) {
-            var iframe = Y.Node.create('<iframe style="background: red;" width="90%" height="90%"  border="0" frameBorder="0" marginWidth="0" marginHeight="0" leftMargin="0" topMargin="0" allowTransparency="true" title="Online Friends">Online Friends</iframe>'),
+            var iframe = Y.Node.create('<iframe style="background: red;" width="100%" height="100%"  border="0" frameBorder="0" marginWidth="0" marginHeight="0" leftMargin="0" topMargin="0" allowTransparency="true" title="Online Friends">Online Friends</iframe>'),
                 DEFAULT_CSS = '',
                 BODY= '<body class="yui3-skin-sam"><br></body>',
                 META = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>',
@@ -37,7 +42,7 @@ YUI().add('togetherLoader', function(Y) {
                 DEFAULT_CSS += '<link rel="stylesheet" type="text/css" href="' + link + '">';
             });
 
-            html = '<!doctype html><html><head>' + META + '<link rel="stylesheet" type="text/css" href="' + DEFAULT_CSS + '"><style>' + STYLE + '</style></head>' + BODY + '</html>',
+            html = '<!doctype html><html><head>' + META + DEFAULT_CSS + '<style>' + STYLE + '</style></head>' + BODY + '</html>',
  
             iframe.set('src', 'javascript' + ((Y.UA.ie) ? ':false' : ':') + ';');
 
@@ -68,7 +73,7 @@ YUI().add('togetherLoader', function(Y) {
 
        // load up modules
         modules.forEach(function(module) {
-            var hash = {};
+            var hash = {}, css = '';
             hash[module.id] = { 
                 fullpath: 'http://' + SERVER + ':' + PORT + '/' + module.file,
                 requires: module.requires
@@ -77,8 +82,9 @@ YUI().add('togetherLoader', function(Y) {
             var myY = YUI, node;
 
             if (module.createDiv) {
-                Y.one('body').append('<div id="' + module.id + '"></div>');
+                Y.one('body').append('<div style="border: 5px solid black;" id="' + module.id + '"></div>');
                 node = Y.one('#' + module.id);
+                node.plug(Y.Plugin.Drag);
             }
 
             if (module.iframe) {
@@ -87,7 +93,7 @@ YUI().add('togetherLoader', function(Y) {
                 myY.use(module.id, function(Y) {
                     Y.log('LOADED SANDBOXED MODULE: ' + module.id);
                     if (Y[module.class]) {
-                        new Y[module.class]();
+                        new Y[module.class](node);
                     }
                 });
             } else {
@@ -102,4 +108,5 @@ YUI().add('togetherLoader', function(Y) {
             }
         });
     };
-});
+}, '1.0', { requires: [ 'dd-plugin' ] } );
+

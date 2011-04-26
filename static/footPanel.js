@@ -14,8 +14,8 @@ YUI().add('Tfootpanel', function(Y) {
             height: '35px'
         });
 
-        this.addButton('Together',       'float: left; margin-left: 20px', function() {});
-        this.addButton('OnlineFriends',  'float: right; margin-right: 20px', function() { Y.Global.fire('toggleFriendsPanel') });
+        this.addButton('Together',       'float: left; padding-left: 20px; margin-left: 20px', function() { /* Go home? */});
+        this.addButton('OnlineFriends',  'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleFriendsPanel'); });
     };
 
 
@@ -25,11 +25,8 @@ YUI().add('Tfootpanel', function(Y) {
             if (!Y.one('#' + id)) {
                 var button = Y.Node.create('<button style="' + styles + ' text-decoration: none; color: white; font-size: 1.5em" class="tfootpanel_button" id="' + id + '"><a href="#">' + label + '</a></button>');
                 this.node.append(button);
-                Y.on('available', function(me) { Y.log("BUTTON AVAIL: " + me); }, '#' + id);
+                button.on('click', cb);
             }
-
-            var button = Y.one('#' + id);
-            button.on('click', cb);
         }
     };
 

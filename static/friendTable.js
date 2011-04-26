@@ -1,11 +1,16 @@
 YUI().add('friendTable', function(Y) {
-    function ft() {
+    function ft(parentDiv) {
         var _this = this;
 
-        this.node = Y.one('body');
+        this.height = 300;
+        this.width  = 500;
+
         this.recordset = new Y.Recordset();
         this.recordset.plug(Y.Plugin.RecordsetIndexer);
         this.uidTable = this.recordset.indexer.createTable('uid');
+        this.parentDiv = parentDiv;
+
+        this.sizeParent();
 
         function location(o) {
             return o.record.getValue("title");
@@ -13,12 +18,12 @@ YUI().add('friendTable', function(Y) {
 
         function join(o) {
             var uid =  o.record.getValue("uid");
-            return '<button uid="' + uid + '">JOIN</button>';
+            return '<button action="join" uid="' + uid + '">JOIN</button>';
         }
 
         function invite(o) {
             var uid =  o.record.getValue("uid");
-            return '<button uid="' + uid + '">INVITE</button>';
+            return '<button action="invite" uid="' + uid + '">INVITE</button>';
         }
 
         var cols = [
@@ -57,21 +62,20 @@ YUI().add('friendTable', function(Y) {
 
         this.friendTable = new Y.DataTable.Base({
             columnset: cols,
-            recordset: this.recordset,
-            summary: "Online Friends",
-            caption: "Table with nested column headers"
+            caption: 'Online Friends',
+            width: this.width,
+            height: this.height
         }).plug(Y.Plugin.DataTableSort);
 
-        /*
-        this.friendTable.plug(Y.Plugin.DataTableScroll, {
-            width: "400px",
-            height: "300px"
-        });
-        */
+        // body in the iframe
+        this.hide();
+        this.friendTable.render(Y.one('body'));
 
-        this.friendTable.render(this.node);
-
-//        this.friendTable.hide();
+        Y.delegate('click', function(e) {
+            var uid = e.target.getAttribute('uid')),
+                action = e.target.getAttribute('action'));
+            Y.Global.fire(action, uid);
+        }, '.yui3-datatable', 'button');
 
         Y.Global.on('friend', function(message) {
             var record = _this.uidTable[message.uid];
@@ -84,16 +88,46 @@ YUI().add('friendTable', function(Y) {
                 _this.friendTable.set('recordset', _this.recordset);
             }
         });
+
+        Y.Global.on('toggleFriendsPanel', function(message) {
+            if (_this.hidden) {
+                _this.show();
+            } else {
+                _this.hide();
+            }
+        });
     };
 
     ft.prototype = {
         show : function() {
-            this.friendTable.show();
+            this.parentDiv.show();
+            this.hidden = false;
         },
         hide : function () {
-            this.friendTable.hide();
+            this.parentDiv.hide();
+            this.hidden = true;
         },
+        sizeParent: function() {
+            var height  = this.height, 
+                width   = this.width,
+                foot    = this.parentDiv,
+                bottom  = foot.get('winHeight') - 35,  // 35 is height of Tfootpanel
+                right   = foot.get('winWidth') * .94,  // Tfootpanel is 94% of width
+                top     = bottom - height,
+                left    = right - width;
+
+            this.parentDiv.setStyles({
+                position:   'fixed',
+                height:     height,
+                width:      width,
+                bottom:     bottom,
+                right:      right,
+                top:        top,
+                left:       left,
+                zIndex:     9999
+            });
+        }
     };
 
     Y.FriendTable = ft;
-}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base' ]});
+}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ]});

@@ -3,9 +3,8 @@ var SERVER     = 'ps48174.dreamhostps.com',
     PORT       = 8081;
 
 YUI({
-    filter: '' ,
     modules: {
-        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/loader.js' }
+        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/loader.js', requires: [ 'dd-plugin' ] }
     }
 }).use('yui', function(Y) {
 
@@ -30,12 +29,12 @@ YUI({
 
         Y.on("domready", function() {
             if (Y.config.win.top == Y.config.win.self) {
-                Y.Global.fire('top_dom');
-                new Y.TogetherLoader({ pipeline: pipeline });
+                new Y.TogetherLoader({ pipeline: pipeline, server: SERVER, port: PORT });
             }
         });
 
         Y.on('socketHere', function(socket) {
+            Y.log('socket here!!');
             Y.Global.on('sendMessage', function(message) {
                 message.uid = FB_USER_ID;
                 socket.send(message);
@@ -44,10 +43,6 @@ YUI({
             socket.on('message', function(message) {
                 Y.Global.fire(message.event, message);
             });
-
-            if (Y.config.win.top == Y.config.win.self) {
-                Y.fire('top_socket', socket);
-            }
         });
 
         // Wait for socket.io to show up
@@ -58,7 +53,9 @@ YUI({
                     timer.cancel();
                     socket = new Y.config.win.io.Socket(SERVER, { port: PORT });
                     socket.connect();
-                    Y.fire('socketHere', socket);
+                    socket.on('connect', function() {
+                        Y.fire('socketHere', socket);
+                    });
                 }
             }
                 // bah not here yet - wait around I guess
