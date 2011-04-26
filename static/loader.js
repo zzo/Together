@@ -4,16 +4,14 @@ YUI().add('togetherLoader', function(Y) {
         { id: 'keepAlive',          file: 'keepAlive.js',                   requires: [ 'event-custom-base' ] },
         { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
         { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
-        { id: 'Tfootpanel',         file: 'footPanel.js',                   requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
+        { id: 'Tfootpanel',         file: 'ui/footPanel.js',                   requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
           css: [ 
-          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css',
-          '/footPanel.css'
+          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css'
           ]
         },
-        { id: 'friendTable', file: 'friendTable.js', requires: ['recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ], class: 'FriendTable', createDiv: true, iframe: true,
+        { id: 'friendTable', file: 'ui/friendTable.js', requires: ['recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ], class: 'FriendTable', createDiv: true, iframe: true,
           css: [ 
-          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css',
-          '/userTable.css'
+          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css'
           ]
         }
     ];
@@ -84,7 +82,6 @@ YUI().add('togetherLoader', function(Y) {
             if (module.createDiv) {
                 Y.one('body').append('<div style="border: 5px solid black;" id="' + module.id + '"></div>');
                 node = Y.one('#' + module.id);
-                node.plug(Y.Plugin.Drag);
             }
 
             if (module.iframe) {
@@ -108,5 +105,5 @@ YUI().add('togetherLoader', function(Y) {
             }
         });
     };
-}, '1.0', { requires: [ 'dd-plugin' ] } );
+});
 

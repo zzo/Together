@@ -4,7 +4,7 @@ var SERVER     = 'ps48174.dreamhostps.com',
 
 YUI({
     modules: {
-        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/loader.js', requires: [ 'dd-plugin' ] }
+        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/loader.js' }
     }
 }).use('yui', function(Y) {
 
@@ -34,7 +34,6 @@ YUI({
         });
 
         Y.on('socketHere', function(socket) {
-            Y.log('socket here!!');
             Y.Global.on('sendMessage', function(message) {
                 message.uid = FB_USER_ID;
                 socket.send(message);

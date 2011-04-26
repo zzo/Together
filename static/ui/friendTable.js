@@ -72,9 +72,9 @@ YUI().add('friendTable', function(Y) {
         this.friendTable.render(Y.one('body'));
 
         Y.delegate('click', function(e) {
-            var uid = e.target.getAttribute('uid')),
-                action = e.target.getAttribute('action'));
-            Y.Global.fire(action, uid);
+            var uid     = e.target.getAttribute('uid'),
+                action  = e.target.getAttribute('action');
+            Y.Global.fire('friendRequest', { action: action, uid: uid });
         }, '.yui3-datatable', 'button');
 
         Y.Global.on('friend', function(message) {
@@ -96,6 +96,10 @@ YUI().add('friendTable', function(Y) {
                 _this.hide();
             }
         });
+
+        Y.Global.on('friendRequest', function(message) {
+            _this.hide();
+        }); 
     };
 
     ft.prototype = {
