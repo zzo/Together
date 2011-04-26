@@ -1,10 +1,8 @@
 YUI().add('friendTable', function(Y) {
-    function ft(socket, fb_id) {
+    function ft() {
         var _this = this;
 
         this.node = Y.one('body');
-        this.socket = socket;
-        this.fb_id  = fb_id;
         this.recordset = new Y.Recordset();
         this.recordset.plug(Y.Plugin.RecordsetIndexer);
         this.uidTable = this.recordset.indexer.createTable('uid');
@@ -75,17 +73,15 @@ YUI().add('friendTable', function(Y) {
 
 //        this.friendTable.hide();
 
-        this.socket.on('message', function(message) {
-            if (message.event === 'friend') {
-                var record = _this.uidTable[message.uid];
-                if (!record) {
-                    _this.recordset.add(message);
-                    _this.friendTable.set('recordset', _this.recordset);
-                    Y.Global.fire('updateFriendCount', _this.recordset.getLength());
-                } else {
-                    record.set('data', message);
-                    _this.friendTable.set('recordset', _this.recordset);
-                }
+        Y.Global.on('friend', function(message) {
+            var record = _this.uidTable[message.uid];
+            if (!record) {
+                _this.recordset.add(message);
+                _this.friendTable.set('recordset', _this.recordset);
+                Y.Global.fire('updateFriendCount', _this.recordset.getLength());
+            } else {
+                record.set('data', message);
+                _this.friendTable.set('recordset', _this.recordset);
             }
         });
     };
@@ -100,4 +96,4 @@ YUI().add('friendTable', function(Y) {
     };
 
     Y.FriendTable = ft;
-}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer' ]});
+}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base' ]});

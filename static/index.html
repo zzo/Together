@@ -53,6 +53,9 @@ function Get_Cookie( check_name ) {
         var cookie = Get_Cookie('fbs_166824393371670');
         FB.init({appId: '166824393371670', status: true, cookie: true, xfbml: true});
         FB.getLoginStatus(function(response) {
+            console.log('LOGIN STATUS');
+                    document.getElementById('login').innerHTML = response;
+            console.log(response);
             if (response.session && cookie) {
                 // logged in and connected user, someone you know
                     document.getElementById('login').innerHTML = 'Yer GTG!  Now go surf the web Together!';

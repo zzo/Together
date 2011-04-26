@@ -65,7 +65,7 @@ var Connect = require('connect'), server = Connect.createServer(
                 var fb_app_id = '166824393371670',
                     fb_cookie = 'fbs_' + fb_app_id;
                 if ((!req.headers.referer || (req.headers.referer.match(hostname) || req.headers.referer.match('facebook.com') ||
-                        req.headers.referer.match('fbcdn.net')))) {
+                        req.headers.referer.match('fbcdn.net') || req.headers.referer.match('toolbar.yahoo.com')))) {
                     // don't track us!
                     res.writeHead(200, {
                           'Content-Length': 0,
@@ -206,6 +206,7 @@ var map = {
          */
         rclient.smembers(uid + '_followers', function(err, members) {
             members.forEach(function(follower) {
+                Y.log(follower + ' is following ' + uid);
                 socketClient.send({ event: 'follower', uid: follower });
             });
         });

@@ -76,13 +76,6 @@ YUI().add('eventing-leader', function(Y) {
                         }
                     }
 
-                    if (ev.type === 'click') {
-                        if (target.get('href')) {
-//                            target.set('href', keepGoing(target.get('href'), 'capture'));
-//                            Y.log('TARGET NOW: ' + target.get('href'));
-                       }
-                    }
-
                     /*
                     if (ev.type.match(/^key/)) {
                         Y.log(ev.type);
@@ -180,10 +173,12 @@ YUI().add('eventing-leader', function(Y) {
         }
     }
 
-    Y.Global.on('events', function(message) {
-        switch(message.event) {
-            case 'follower':    startCapture(); break;
-            case 'stopCapture': stopCapture();  break;
-        }
+    Y.Global.on('follower', function(message) {
+        startCapture();
     });
-}, '1.0', { requires: [ 'json', 'selector-css3', 'event-delegate' ] } );
+
+    Y.Global.on('stopCapture', function(message) {
+        stopCapture();
+    });
+
+}, '1.0', { requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] } );
