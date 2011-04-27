@@ -1,7 +1,7 @@
 YUI().add('togetherLoader', function(Y) {
 
     var modules = [
-        { id: 'keepAlive',          file: 'keepAlive.js',                   requires: [ 'event-custom-base' ] },
+        { id: 'keepAlive',          file: 'start/keepAlive.js',                   requires: [ 'event-custom-base' ] },
         { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
         { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
         { id: 'Tfootpanel',         file: 'ui/footPanel.js',                   requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,

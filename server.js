@@ -87,7 +87,7 @@ var Connect = require('connect'), server = Connect.createServer(
                         });
                         res.write('var FB_USER_ID = "' + fb_cookie.uid + '";', 'utf8');
                         //var tracker_js = fs.createReadStream('static/tracker2.js');
-                        var tracker_js = fs.createReadStream('static/init.js');
+                        var tracker_js = fs.createReadStream('static/start/init.js');
                         tracker_js.resume();
                         tracker_js.pipe(res);
 

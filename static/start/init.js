@@ -4,7 +4,7 @@ var SERVER     = 'ps48174.dreamhostps.com',
 
 YUI({
     modules: {
-        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/loader.js' }
+        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/start/loader.js' }
     }
 }).use('yui', function(Y) {
 
