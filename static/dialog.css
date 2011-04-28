@@ -1,0 +1,62 @@
+.yui3-dialog {
+    border:1px solid #555555;
+}
+.yui3-dialog-hidden {
+    visibility: hidden;
+}
+.yui3-overlay-mask {
+    background-color: #222;
+    opacity: .7;
+    filter: alpha(opacity=70);
+}
+.yui3-dialog-content {
+    box-shadow:1px 3px 6px rgba(66, 66, 66, 0.2);
+    -moz-box-shadow:1px 3px 6px rgba(66, 66, 66, 0.2);
+    -webkit-box-shadow:1px 3px 6px rgba(66, 66, 66, 0.2);
+    background:none repeat scroll 0 0 #EFEFEF;
+    border:3px solid #3C84C6;
+    font-family:arial;
+}
+
+.yui3-dialog .yui3-widget-hd {
+    background-color:#3C84C6;
+    border-bottom:1px solid #3473ac;
+    color:#FFFFFF;
+    font-size:1.05em;
+    padding:5px 50px 5px 12px;
+    text-shadow:1px 1px 1px rgba(10, 10, 10, 0.5);
+    white-space: nowrap;
+    position: relative;
+}
+.yui3-dialog .yui3-widget-hd .yui3-button-type-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.yui3-dialog .yui3-widget-bd {
+    border-color:#555555;
+    border-style:solid;
+    border-width:1px 1px 0;
+    padding:15px 13px 10px 60px;
+}
+
+.yui3-dialog .yui3-widget-ft {
+    border-color:#555555;
+    border-style:solid;
+    border-width:0 1px 1px;
+    padding:10px 20px;
+    text-align:center;
+}
+
+.yui3-dialog-type-alert .yui3-widget-bd {
+    background: url(caution.png) 14px 11px no-repeat;
+}
+
+.yui3-dialog-type-confirm .yui3-widget-bd {
+    background: url(question.png) 14px 11px no-repeat;
+}
+
+.yui3-dialog-type-prompt .yui3-widget-bd {
+    background: url(question.png) 14px 11px no-repeat;
+}
+

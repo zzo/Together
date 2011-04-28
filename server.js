@@ -134,7 +134,7 @@ function sendEvents(name, index, socketClient) {
 
 var map = {
     join: function(data, socketClient) {
-        var me = data.me, them = data.them;
+        var me = data.uid, them = data.them;
 
         if (sockets[them]) {
             rclient.hgetall(me, function(error, me_hash) {

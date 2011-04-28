@@ -17,13 +17,15 @@ YUI().add('friendTable', function(Y) {
         }
 
         function join(o) {
-            var uid =  o.record.getValue("uid");
-            return '<button action="join" uid="' + uid + '">JOIN</button>';
+            var uid =  o.record.getValue("uid"),
+                name =  o.record.getValue("name");
+            return '<button action="join" fullname="' + name + '" uid="' + uid + '">JOIN</button>';
         }
 
         function invite(o) {
-            var uid =  o.record.getValue("uid");
-            return '<button action="invite" uid="' + uid + '">INVITE</button>';
+            var uid =  o.record.getValue("uid"),
+                name =  o.record.getValue("name");
+            return '<button action="invite" fullname="' + name + '" uid="' + uid + '">INVITE</button>';
         }
 
         var cols = [
@@ -73,8 +75,10 @@ YUI().add('friendTable', function(Y) {
 
         Y.delegate('click', function(e) {
             var uid     = e.target.getAttribute('uid'),
-                action  = e.target.getAttribute('action');
-            Y.Global.fire('friendRequest', { action: action, uid: uid });
+                action  = e.target.getAttribute('action'),
+                name    = e.target.getAttribute('fullname');
+
+            Y.Global.fire(action, { them: uid, name: name });
         }, '.yui3-datatable', 'button');
 
         Y.Global.on('friend', function(message) {
@@ -97,9 +101,14 @@ YUI().add('friendTable', function(Y) {
             }
         });
 
-        Y.Global.on('friendRequest', function(message) {
+        Y.Global.on('join', function(message) {
+            _this.hide();
+        });
+
+        Y.Global.on('invite', function(message) {
             _this.hide();
         }); 
+
     };
 
     ft.prototype = {

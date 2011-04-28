@@ -1,12 +1,42 @@
 /*jslint plusplus: false */
 var SERVER     = 'ps48174.dreamhostps.com',
-    PORT       = 8081;
-
-YUI({
+    PORT       = 8081,
+    yconfig = { 
+        gallery: 'gallery-2011.03.11-23-49',
+/*
+        groups: {
+            'notify' : {
+                base : './lib/yui3-gallery/src/gallery-notify/',
+                modules : {
+                    'gallery-notify' : {
+                        path : 'js/notify.js',
+                        requires : ['growl-skin','anim','substitute','widget','widget-parent','widget-child','gallery-timer','event-mouseenter'],
+                        skinable : true
+                    },
+                    'growl-skin' : {
+                        path : 'assets/skins/growl/notify.css',
+                        type : 'css'
+                    }
+                }
+            },
+            'timer' : {
+                base : './lib/yui3-gallery/src/gallery-timer/',
+                modules : {
+                    'gallery-timer' : {
+                        path : 'js/timer.js',
+                        requires : ['base','event-custom']
+                    }
+                }
+            }
+    },
+*/
     modules: {
-        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/start/loader.js' }
+        togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/start/loader.js' },
+        togetherNotify: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/notify.js', requires: [ 'event-custom-base', 'gallery-notify', 'gallery-dialog' ] }
     }
-}).use('yui', function(Y) {
+};
+
+YUI(yconfig).use('yui', function(Y) {
 
     var pipeline = YUI({
         win: window,
@@ -18,7 +48,7 @@ YUI({
         return pipeline.Get.script.apply(pipeline, arguments);
     };
 
-    Y.use('node', 'togetherLoader', function(Y) {
+    Y.use('node', 'togetherLoader', 'togetherNotify', function(Y) {
 
         var keepAliveTimer,
             script = Y.config.doc.createElement('script');
@@ -30,6 +60,7 @@ YUI({
         Y.on("domready", function() {
             if (Y.config.win.top == Y.config.win.self) {
                 new Y.TogetherLoader({ pipeline: pipeline, server: SERVER, port: PORT });
+                new Y.TogetherNotify();
             }
         });
 
@@ -38,6 +69,16 @@ YUI({
                 message.uid = FB_USER_ID;
                 socket.send(message);
             });
+
+            Y.Global.on('join', function(message) {
+                message.event = 'join';
+                Y.Global.fire('sendMessage', message);
+            })
+
+            Y.Global.on('invite', function(message) {
+                message.event = 'invite';
+                Y.Global.fire('sendMessage', message);
+            })
 
             socket.on('message', function(message) {
                 Y.Global.fire(message.event, message);

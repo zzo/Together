@@ -1,10 +1,11 @@
 YUI().add('togetherLoader', function(Y) {
 
     var modules = [
-        { id: 'keepAlive',          file: 'start/keepAlive.js',                   requires: [ 'event-custom-base' ] },
+        { id: 'keepAlive',          file: 'start/keepAlive.js',             requires: [ 'event-custom-base' ] },
         { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
         { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
-        { id: 'Tfootpanel',         file: 'ui/footPanel.js',                   requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
+//        { id: 'notify',             file: 'ui/notify.js',                   requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
+        { id: 'Tfootpanel',         file: 'ui/footPanel.js',                requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
           css: [ 
           'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css'
           ]
@@ -13,7 +14,13 @@ YUI().add('togetherLoader', function(Y) {
           css: [ 
           'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css'
           ]
+        }/*,
+        { id: 'dialogs', file: 'ui/dialogs.js', requires: [ 'overlay', 'event-custom-base' ], class: 'Dialogs', createDiv: true, iframe: true,
+          css: [ 
+          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget-stack.css&3.3.0/build/overlay/assets/skins/sam/overlay.css'
+          ]
         }
+*/
     ];
 
 //'width: 500px; height: 400px; position: absoulte;'
@@ -80,7 +87,7 @@ YUI().add('togetherLoader', function(Y) {
             var myY = YUI, node;
 
             if (module.createDiv) {
-                Y.one('body').append('<div style="border: 5px solid black;" id="' + module.id + '"></div>');
+                Y.one('body').append('<div style="border: 2px solid black" id="' + module.id + '"></div>');
                 node = Y.one('#' + module.id);
             }
 
