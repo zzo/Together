@@ -174,6 +174,8 @@ YUI().add('eventing-leader', function(Y) {
     }
 
     Y.Global.on('follower', function(message) {
+            Y.log('FOLLOWER');
+            Y.log(message);
         startCapture();
     });
 

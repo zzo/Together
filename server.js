@@ -117,8 +117,6 @@ var Connect = require('connect'), server = Connect.createServer(
     rclient = redis.createClient(),
     bulk    = 100, subscriptions = {};
 
-server.fb_cookie = fb_cookie;
-
 function sendEvents(name, index, socketClient) {
     rclient.llen(name, function(error, length) {
         var end, bulk = length;
@@ -138,33 +136,60 @@ var map = {
 
         if (sockets[them]) {
             rclient.hgetall(me, function(error, me_hash) {
-                console.log('sending join_request to ' + them);
-                sockets[them].send({ event: 'join_request', from: me, name: me_hash.name });
-                rclient.hset(me,   'want_to_join', them);
-                rclient.hset(them, 'wants_to_join', me);
+                rclient.hgetall(them, function(error, them_hash) {
+                    console.log('sending join_request to ' + them);
+                    sockets[them].send({ event: 'join_request', from: me, name: me_hash.name });
+                    rclient.hset(me,   'want_to_join', them);
+                    rclient.hset(me,   'want_to_join_name', them_hash.name);
+                    rclient.hset(them, 'wants_to_join', me);
+                    rclient.hset(them, 'wants_to_join_name', me_hash.name);
+                });
             });
         }
     },
     join_response: function(data, socketClient) {
-        var me = data.me, them = data.them, response = data.response;
+        var me = data.uid, them = data.them, response = data.response;
         rclient.hgetall(me, function(error, me_hash) {
             rclient.hgetall(them, function(error, them_hash) {
-                /*
-                console.log('ME');
-                console.log(me_hash);
-                console.log('THEM');
-                console.log(them_hash);
-                */
                 if (them_hash.want_to_join == me && me_hash.wants_to_join == them) {
                     rclient.hdel(me,   'wants_to_join');
+                    rclient.hdel(me,   'wants_to_join_name');
                     rclient.hdel(them, 'want_to_join');
+                    rclient.hdel(them, 'want_to_join_name');
+                    console.log('SENDING JOIN RESPONSE TO: ' + them);
                     sockets[them].send({ event: 'join_response', from: me, name: me_hash.name, response: response });
                     if (response) {
                         socketClient.send({ event: 'follower', uid: them });
                         rclient.sadd(me + '_followers', them);
                         rclient.hset(them, 'following', me);
                     }
+                } else {
+                    console.log('NO MATCH');
                 }
+            });
+        });
+    },
+    stop_follow: function(data, socketClient) {
+        // Stop following regardless of me breaking it off or them breaking it off
+        // so do both cases
+        var me = data.uid, them = data.them;
+        rclient.hgetall(me, function(error, me_hash) {
+            rclient.hgetall(them, function(error, them_hash) {
+                var message_me, message_them;
+                if (rclient.srem(me + '_followers', them)) {
+                    // The leader kicked out the follower
+                    rclient.hdel(them, 'following', me);
+                    message_me = them.name + ' is no longer following you';
+                    message_them = 'You are no longer following ' + me.name;
+                } else {
+                    // The follower quit following the leader
+                    rclient.srem(them + '_followers', me);
+                    rclient.hdel(me, 'following', them);
+                    message_me = 'You are no longer following ' + them.name;
+                    message_them = me.name + ' is no longer following you';
+                }
+                socketClient.send({event: 'stopFollow', them: them, message: message_me });
+                sockets[them].send({event: 'stopFollow', them: me, message: message_them });
             });
         });
     },
@@ -188,13 +213,60 @@ var map = {
                 set.forEach(function(friend) {
                     rclient.hgetall(friend, function(err, friend_hash) {
                         // back out to me - my friend's status
-                        var msg = { event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend, following: friend_hash.following };
-                        socketClient.send(msg);
+                        var msg = { event: 'friend', name: friend_hash.name, href: friend_hash.href, title: friend_hash.title, uid: friend };
+                        if (friend_hash.want_to_join) {
+                            msg.want_to_join = friend_hash.want_to_join;
+                            msg.want_to_join_name = friend_hash.want_to_join_name;
+                        }
+
+                        if (friend_hash.wants_to_join) {
+                            msg.wants_to_join = friend_hash.wants_to_join;
+                            msg.wants_to_join_name = friend_hash.wants_to_join_name;
+                        }
+
+                        if (friend_hash.following) {
+                            msg.following = friend_hash.following;
+                            rclient.hgetall(friend_hash.following, function(error, following) {
+//                        console.log('friend: ' + friend + ' IS FOLLOWING ' + friend_hash.following + ' ' + following.name);
+                                msg.followingName = following.name;
+                                socketClient.send(msg);
+                            });
+                        } else {
+                            // even if this guy doesn't have any followers 
+                            rclient.smembers(uid + '_followers', function(err, members) {
+                                if (members && members.length) {
+                                    msg.followers = members;
+                                }
+                                socketClient.send(msg);
+                            });
+                        }
 
                         // send my status out to my friends
                         if (sockets[friend]) {
-                            msg = { event: 'friend', name: me.name, href: data.href, title: data.title, uid: data.uid, following: me.following };
-                            sockets[friend].send(msg);
+                            msg = { event: 'friend', name: me.name, href: data.href, title: data.title, uid: data.uid };
+                            if (me.want_to_join) {
+                                msg.want_to_join = me.want_to_join;
+                                msg.want_to_join_name = me.want_to_join_name
+                            }
+                            if (me.wants_to_join) {
+                                msg.wants_to_join = me.wants_to_join;
+                                msg.wants_to_join_name = me.wants_to_join_name;
+                            }
+                            if (me.following) {
+                                msg.following = me.following;
+                                rclient.hgetall(me.following, function(error, following) {
+//                        console.log('me: ' + uid + ' IS FOLLOWING ' + me.following + ' ' + following.name);
+                                    msg.followingName = following.name;
+                                    socketClient.send(msg);
+                                });
+                            } else {
+                                rclient.smembers(friend + '_followers', function(err, members) {
+                                    if (members && members.length) {
+                                        msg.followers = members;
+                                    }
+                                    sockets[friend].send(msg);
+                                });
+                            }
                         }
                     });
                 });
@@ -204,12 +276,13 @@ var map = {
         /*
          * Tell me everyone following me
          */
+        /*
         rclient.smembers(uid + '_followers', function(err, members) {
             members.forEach(function(follower) {
-                Y.log(follower + ' is following ' + uid);
                 socketClient.send({ event: 'follower', uid: follower });
             });
         });
+        */
     },
              /*
     startCapture: function(data) {
@@ -267,10 +340,14 @@ var map = {
     }
 };
 
+rclient.del('users');   // Clear this out
 socket.on('connection', function(socketClient) {
-    // new client is here!
     socketClient.on('message', function(data) { 
         var ev = data.event;
+        if (data.uid) {
+            console.log('hello ' + data.uid);
+            socketClient.uid = data.uid;
+        }
         if (map[ev]) {
             map[ev](data, socketClient);
         } else {
@@ -279,7 +356,7 @@ socket.on('connection', function(socketClient) {
         }
     });
 
-    socketClient.on('disconnect', function() { console.log('DISCONNECT'); });
+    socketClient.on('disconnect', function() { rclient.srem('users', this.uid); delete sockets[this.uid]; console.log('Bye Bye ' + this.uid);  });
 });
 
 var PORT = 8081;

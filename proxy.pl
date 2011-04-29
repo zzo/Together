@@ -16,13 +16,13 @@ my $INSERT = <<END;
     var iframe = d.body.appendChild(d.createElement('iframe')), doc = iframe.contentWindow.document;
         iframe.src = 'about:blank';
         iframe.style.cssText = "position:absolute;width:1px;height:1px;left:-9999px;";
-    doc.open().write('<body onload="YUI_config={filter:\\'DEBUG\\',win:window.parent,doc:window.parent.document};var d=document;d.getElementsByTagName(\\'head\\')[0].appendChild(d.createElement(\\'script\\')).src=\\'http://ps48174.dreamhostps.com:8081/together\\';"><script src="http://yui.yahooapis.com/combo?3.3.0/build/yui/yui-min.js&3.3.0/build/loader/loader-min.js"><\\/script><\\/body>');
+    doc.open().write('<body onload="YUI_config={filter:\\'\\',win:window.parent,doc:window.parent.document};var d=document;d.getElementsByTagName(\\'head\\')[0].appendChild(d.createElement(\\'script\\')).src=\\'http://ps48174.dreamhostps.com:8081/together\\';"><script src="http://yui.yahooapis.com/combo?3.3.0/build/yui/yui-min.js&3.3.0/build/loader/loader-min.js"><\\/script><\\/body>');
     doc.close();
 })(document);
 </script>
 END
 
-my @css_files = qw(growl dialog);
+my @css_files = qw(growl dialog button);
 my $css;
 foreach my $css_file (@css_files) {
     $css .= '<link rel="stylesheet" href="http://' . $hostname . '/' . $css_file . '.css" type="text/css" />';

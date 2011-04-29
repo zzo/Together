@@ -4,6 +4,7 @@ YUI().add('friendTable', function(Y) {
 
         this.height = 300;
         this.width  = 500;
+        this.followers = {};
 
         this.recordset = new Y.Recordset();
         this.recordset.plug(Y.Plugin.RecordsetIndexer);
@@ -28,6 +29,27 @@ YUI().add('friendTable', function(Y) {
             return '<button action="invite" fullname="' + name + '" uid="' + uid + '">INVITE</button>';
         }
 
+        function status(o) {
+            var uid =  o.record.getValue("uid"),
+                name =  o.record.getValue("name"),
+                following =  o.record.getValue("following"),
+                followingName =  o.record.getValue("followingName"),
+                wantToJoinName =  o.record.getValue("want_to_join_name"),
+                wantsToJoinName =  o.record.getValue("wants_to_join_name");
+
+            if (_this.followers[uid]) {
+                return '<button action="stopFollow" fullname="' + name + '" uid="' + uid + '">Kick To Curb</button>';
+            } else if (following) {
+                return 'Following ' + followingName;
+            } else if (wantToJoinName) {
+                return 'Hoping to join ' + wantsToJoinName;
+            } else if (wantsToJoinName) {
+                return wantsToJoinName + ' wants to join';
+            } else {
+                return 'Browsing';
+            }
+        }
+
         var cols = [
             {
                 key: "name",
@@ -46,7 +68,8 @@ YUI().add('friendTable', function(Y) {
                 key: "status",
                 label: "Status",
                 sortable: true,
-                abbr: "Status"
+                abbr: "Status",
+                formatter: status
             },
             {
                 key: "join",
@@ -81,7 +104,16 @@ YUI().add('friendTable', function(Y) {
             Y.Global.fire(action, { them: uid, name: name });
         }, '.yui3-datatable', 'button');
 
+        Y.Global.on('follower', function(message) {
+            _this.followers[message.uid] = 1;
+        });
+
+        Y.Global.on('stopFollow', function(message) {
+            delete _this.followers[message.uid];
+        });
+
         Y.Global.on('friend', function(message) {
+                Y.log(message);
             var record = _this.uidTable[message.uid];
             if (!record) {
                 _this.recordset.add(message);

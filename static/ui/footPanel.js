@@ -5,13 +5,16 @@ YUI().add('Tfootpanel', function(Y) {
         node.setStyles({
             position: 'fixed',
             bottom: 0, left: 0,
-            zIndex: 9999,
+            zIndex: 99999,
             background: '#333232',
             border: '1px solid #c3c3c3',
             borderBottom: 'none',
             width: '94%',
             margin: '0 3%',
-            height: '35px'
+            height: '35px',
+            borderTopLeftRadius: '4px',
+            borderTopRightRadius: '4px',
+            boxShadow: '0 0 6px #A6A6A6'
         });
 
         this.addButton('Together',       'float: left; padding-left: 20px; margin-left: 20px', function() { /* Go home? */});

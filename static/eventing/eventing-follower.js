@@ -148,6 +148,7 @@ YUI().add('eventing-follower', function(Y) {
     }
 
     Y.Global.on('events', function(message) {
+            Y.log('GETTING EVENTS!');
         var event = message.data, i = 0, timeout = 0, event_obj, url;
         if (!TRACKER_QUEUE) {
             startFollow();

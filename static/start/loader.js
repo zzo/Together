@@ -1,15 +1,15 @@
 YUI().add('togetherLoader', function(Y) {
 
     var modules = [
-        { id: 'keepAlive',          file: 'start/keepAlive.js',             requires: [ 'event-custom-base' ] },
-        { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
-        { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
-//        { id: 'notify',             file: 'ui/notify.js',                   requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
         { id: 'Tfootpanel',         file: 'ui/footPanel.js',                requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
           css: [ 
           'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css'
           ]
         },
+        { id: 'keepAlive',          file: 'start/keepAlive.js',             requires: [ 'event-custom-base' ] },
+        { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
+        { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
+//        { id: 'notify',             file: 'ui/notify.js',                   requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
         { id: 'friendTable', file: 'ui/friendTable.js', requires: ['recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ], class: 'FriendTable', createDiv: true, iframe: true,
           css: [ 
           'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css'
