@@ -1,6 +1,4 @@
 YUI().add('togetherLoader', function(Y) {
-
-        Y.log('LOADER');
     var modules = [
         { id: 'Tfootpanel',         file: 'ui/footPanel.js',                requires: [ 'node', 'event-custom-base' ], class: 'FootPanel',   createDiv: true,
           css: [ 
@@ -10,13 +8,9 @@ YUI().add('togetherLoader', function(Y) {
         { id: 'keepAlive', file: 'start/keepAlive.js', requires: [ 'event-custom-base' ] },
 //        { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
 //        { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
+        { id: 'notify',    file: 'ui/notify.js',          requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
         { id: 'facebook',  file: 'facebook/facebook.js',  requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Facebook', createDiv: true, iframe: true, scrolling: 'yes' },
-        { id: 'notify',    file: 'ui/notify.js',          requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' }
-//        { id: 'friendTable', file: 'ui/friendTable.js', requires: ['recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ], class: 'FriendTable', createDiv: true, iframe: true,
-//          css: [ 
-//          'http://yui.yahooapis.com/combo?3.3.0/build/cssreset/reset-min.css&3.3.0/build/cssfonts/fonts-min.css&3.3.0/build/widget/assets/skins/sam/widget.css&3.3.0/build/datatable/assets/skins/sam/datatable-base.css'
-//          ]
-//        },
+        { id: 'twitter',  file: 'twitter/twitter.js',  requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Twitter', createDiv: true, iframe: true, scrolling: 'yes' }
 /*
         { id: 'dialogs', file: 'ui/dialogs.js', requires: [ 'overlay', 'event-custom-base' ], class: 'Dialogs', createDiv: true, iframe: true,
           css: [

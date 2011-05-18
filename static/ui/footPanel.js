@@ -18,6 +18,7 @@ YUI().add('Tfootpanel', function(Y) {
         });
 
         this.addButton('Dashr',    'float: left; padding-left: 20px; margin-left: 20px', function() { /* Go home? */});
+        this.addButton('Twitter', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleTwitterPanel'); });
         this.addButton('Facebook', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleFriendsPanel'); });
     };
 

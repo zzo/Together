@@ -166,7 +166,7 @@ YUI().add('facebook', function(Y) {
                 _this.friends[friend.id] = friend;
                 _this.friends[friend.id].profile_messages = [];
             });
-            _this.getAllStatus(true);
+//            _this.getAllStatus(true);
         });
 
         Y.Global.on('facebook.status', function(message) {

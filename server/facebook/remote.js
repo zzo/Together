@@ -13,13 +13,13 @@ var remote_facebook = function(args) {
      */
     this.messenger.on('facebook.getFriends', function(message) {
         var from = message.uid;
-        _this.messenger.get(from, 'fb_access_token', function(token) {
+        _this.messenger.get(from, 'facebook.access_token', function(token) {
             _this.getFB('friends', function(json_friends) {
                 var friends = JSON.parse(json_friends), key = 'facebook.friends.' + from;
+                _this.messenger.sendMessage(from, { event: 'facebook.friends', friends: friends });
                 friends.data.forEach(function(friend) {
                     _this.redis.sadd(key, JSON.stringify(friend));
                 });
-                _this.messenger.sendMessage(from, { event: 'facebook.friends', friends: friends });
             }, token);
         });
     });
@@ -50,7 +50,7 @@ var remote_facebook = function(args) {
             }
             if (!statusObj || !statusObj.timestamp || ((parseInt(statusObj.timestamp, 10) + cacheTimeout) < now)) {
                 _this.redis.hset(statusKey, 'timestamp', now);
-                _this.messenger.get(from, 'fb_access_token', function(token) {
+                _this.messenger.get(from, 'facebook.access_token', function(token) {
                     _this.getFB('feed', function(json_status) {
                         var status = JSON.parse(json_status);
                         if (status.data) {

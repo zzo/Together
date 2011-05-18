@@ -8,37 +8,10 @@ var facebook = function(args) {
     return function(req, res, next) {
         var url = req.urlp = urlparser.parse(req.url, true);
 
-        if (url.pathname == "/fbCB" ) {
-            if (url.query.code) {
-                // not done yet!
-                var qstring = qs.stringify({
-                    client_id: args.fb_id,
-                    redirect_uri: 'http://' + args.hostname + '/fbCB',
-                    client_secret: args.fb_secret,
-                    code: url.query.code
-                });
-
-                console.log(qstring);
-                https.get({ host: 'graph.facebook.com', path: '/oauth/access_token?' + qstring }, function(res) { 
-                    var d = '';
-                    res.on('data', function(data) {
-                        d += data;
-                    });
-                    res.on('end', function() {
-                        var q = qs.parse(d);
-                        console.log(req.session.user);
-                        console.log(q.access_token);
-                        args.rclient.hset(req.session.user, 'fb_access_token', q.access_token);
-                    });
-                });
-            }
-
-            res.writeHead(302, { 'Location': '/' }); res.end();
-            return;
-        } else if (url.pathname == "/auth/facebook" ) {
+        if (url.pathname == "/auth/facebook" ) {
             req.authenticate(['facebook'], function(error, authenticated) {
                 if( authenticated ) {
-                    console.log('AJUTHE!!');
+                    args.rclient.hset(req.session.user, 'facebook.access_token', req.session.access_token);
                     res.end("<html><h1>Hello Facebook user:" + JSON.stringify( req.getAuthDetails().user ) + ".</h1></html>")
                 }
                 else {
@@ -65,7 +38,6 @@ var facebook = function(args) {
               </body>                                            \n\
             </html>');
         } else {
-            console.log('in FB auth going to next');
             next();
         }
     };

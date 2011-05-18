@@ -5,12 +5,8 @@ var urlparser   = require('url'),
     return function(req, res, next) {
         var url = req.urlp = urlparser.parse(req.url, true);
         if (url.pathname == "/auth/twitter") {
-            console.log('IN AUTH TWITTER');
-            console.log(url);
-            console.log(req.session);
             req.authenticate(['twitter'], function(error, authenticated) {
-                if(authenticated ) {
-                    console.log('AUTHENTICATED');
+                if(authenticated) {
                     var oa = new OAuth(
                         "http://twitter.com/oauth/request_token",
                         "http://twitter.com/oauth/access_token",
@@ -21,27 +17,10 @@ var urlparser   = require('url'),
                         "HMAC-SHA1"
                     );
 
-                    console.log('oauth token: ' +  req.getAuthDetails()["twitter_oauth_token"]);
-                    console.log('oauth token secret: ' +  req.getAuthDetails()["twitter_oauth_token_secret"]);
-                    console.log('user: ' + req.session.user);
-
                     args.rclient.hset(req.session.user, 'twitter.oath_token', req.getAuthDetails()["twitter_oauth_token"]);
                     args.rclient.hset(req.session.user, 'twitter.oath_token_secret', req.getAuthDetails()["twitter_oauth_token_secret"]);
-                    res.end("<html><h1>Twitter authentication succeede :) </h1></html>")
-/*
-                    oa.getProtectedResource(
-                        "http://twitter.com/statuses/user_timeline.xml",
-                        "GET",
-                        req.getAuthDetails()["twitter_oauth_token"],
-                        req.getAuthDetails()["twitter_oauth_token_secret"],
-                            function (error, data) {
-                                res.writeHead(200, {'Content-Type': 'text/html'})
-                                res.end("<html><h1>Hello! Twitter authenticated user ("+req.getAuthDetails().user.username+")</h1>"+data+ "</html>")
-                            }
-                    );
-*/
+                    res.end("<html><h1>Twitter authentication succeeded :) </h1></html>")
                 } else {
-                    console.log('NOT AUTHENTICATED');
                     res.end("<html><h1>Twitter authentication failed :( </h1></html>")
                     return;
                 }
@@ -61,6 +40,33 @@ var urlparser   = require('url'),
                 </div>                                           \n\
               </body>                                            \n\
             </html>');
+        } else if (url.pathname == '/twitter/test') {
+            args.rclient.hgetall(req.session.user, function(error, userHash) {
+
+                    var token = userHash['twitter.oath_token'],
+                        secret = userHash['twitter.oath_token_secret'],
+                        oa = new OAuth(
+                            "http://twitter.com/oauth/request_token",
+                            "http://twitter.com/oauth/access_token",
+                            args.key,     // twitter consumer key
+                            args.secret,  // twitter consumer secret
+                            "1.0",
+                            null,
+                            "HMAC-SHA1"
+                        );
+
+                    oa.getProtectedResource(
+                        "http://twitter.com/statuses/home_timeline.json",
+                        "GET",
+                        token,
+                        secret,
+                            function (error, data) {
+                                res.writeHead(200, {'Content-Type': 'text/html'})
+                                res.end("<html><h1>Hello! Twitter authenticated user ("+req.getAuthDetails().user.username+")</h1>"+data+ "</html>")
+                            }
+                    );
+            });
+
         } else {
             next();
         }

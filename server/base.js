@@ -24,7 +24,7 @@ var FB_ID       = '166824393371670',
         ,Connect.static(__dirname + '/../static') // Serve all static files in the current dir.
         ,Connect.session({ store: redis, secret: 'dashboard' })
         ,myauth.authCheck(rclient, hostname)
-        ,auth([auth.Facebook({appId : FB_ID, appSecret: FB_SECRET, scope: "offline_access,xmpp_login,user_status,friends_status,read_stream", callback: 'http://' + hostname + '/fbCB'})])
+        ,auth([auth.Facebook({appId : FB_ID, appSecret: FB_SECRET, scope: "offline_access,xmpp_login,user_status,friends_status,read_stream", callback: 'http://' + hostname + '/auth/facebook'})])
         ,facebook.local_facebook({ rclient: rclient, hostname: hostname, fb_id: FB_ID, fb_secret: FB_SECRET })
         ,auth([auth.Twitter({consumerKey: TW_KEY, consumerSecret: TW_SECRET, callback: 'http://' + hostname + '/auth/twitter' })])
         ,twitter.local_twitter({ key: TW_KEY, secret: TW_SECRET, rclient: rclient, hostname: hostname })
@@ -45,8 +45,12 @@ var MessageServer = function(args) {
 
     socket.on('connection', function(socketClient) {
         socketClient.on('message', function(data) {
-            console.log('GOT MESSAGE');
-            console.log(data);
+
+            if (data.event !=  'iamHere') {
+                console.log('GOT MESSAGE');
+                console.log(data);
+            }
+
             if (data.uid) {
                 _this.sockets[data.uid] = socketClient;
                 socketClient.uid = data.uid;
@@ -108,6 +112,12 @@ var PORT = 8081;
 server.listen(PORT);
 console.log('Together server listening on port ' + PORT);
 var ms = new MessageServer( { socket: socket, redis: rclient, server: server } );
+
+/// FACEBOOK
 var remote_fb = require('./facebook/remote');
 var local_facebook = new remote_fb.remote_facebook({ messenger: ms, redis: rclient });
+
+/// TWITTER
+var remote_twitter = require('./twitter/remote');
+var local_twitter = new remote_twitter.remote_twitter({ messenger: ms, redis: rclient });
 

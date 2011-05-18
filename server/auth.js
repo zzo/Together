@@ -58,13 +58,17 @@ var authCheck = function(rclient, hostname) {
 
                 });
             });
-        }/* else if (url.pathname !== '/start/login.html' && (!req.session || !req.session.user)) {
+       /* } else if (url.pathname !== '/start/login.html' && (!req.session || !req.session.user)) {
             console.log(url.pathname);
             res.writeHead(200, { 'Content-type': 'application/javascript' });
             res.end('top.location.href="http://' + hostname + '/start/login.html";');
             return;
-        }*/ else {
-            console.log('FAIL: ' + url.pathame);
+        }*/ 
+        } else if (url.pathname == '/together') {
+            res.end('top.location.href="http://' + hostname + '/start/login.html";', 'utf8');
+        } else {
+            console.log('FAIL: ' + url.pathname);
+            console.log(url);
             fail('ya gotta log in...');
         }
 
