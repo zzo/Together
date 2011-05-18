@@ -18,6 +18,11 @@ YUI().add('togetherNotify', function(Y) {
         this.notify = notify;
         this.dialog = dialog;
 
+        Y.Global.on('notify', function(message) {
+            _this.notify.add({ message: message.message });
+        });
+
+        /*
         Y.Global.on('join', function(message) {
             _this.notify.add({'message': 'Sending Join request to ' + message.name + '...' });
         });
@@ -31,9 +36,34 @@ YUI().add('togetherNotify', function(Y) {
         });
 
         Y.Global.on('join_response', function(message) {
-                Y.log(message);
-            _this.notify.add({ 'message': message.name + ' has ' + (message.response ? 'allowed' : 'denied' )  + ' your join request' });
+            _this.notify.add({ 'message': message.name + ' has ' + (message.response ? 'accepted' : 'denied' )  + ' your join request' });
         });
+
+        Y.Global.on('fbstatus_change', function(msg) {
+            var message = msg.from.name + ' sez:<br/>';
+            if (msg.link) {
+                message += '<a href="' + msg.link + '" target="_blank">';
+            }
+            if (msg.picture) {
+                message += '<msg src="' + msg.picture + '" />';
+            }
+
+            message += msg.message;
+
+            if (msg.link) {
+                message += '</a>';
+            }
+
+            if (msg.actions) {
+                message += '<br />';
+                for (var i = 0; i < msg.actions.length; i++) {
+                    message += '<a href="' + msg.actions[i].link + '" target="_blank">' + msg.actions[i].name + '</a>'
+                }
+            }
+
+            _this.notify.add({ 'message': message });
+        });
+        */
     };
 
     Y.TogetherNotify.prototype = {

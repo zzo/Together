@@ -1,7 +1,7 @@
 .yui3-skin-growl .yui3-notify {
-    position:absolute;
     right: 20px;
     top: 20px;
+    position: fixed;
 }
 .yui3-skin-growl .yui3-notify .yui3-notify-content li {
     background-color: rgba(20,20,20,.8);

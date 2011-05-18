@@ -10,69 +10,75 @@ var SERVER     = 'ps48174.dreamhostps.com',
     };
 
 YUI(yconfig).use('yui', function(Y) {
-
-    var pipeline = YUI({
-        win: window,
-        doc: document
-    });
-
-    // JS pipeline into initial iframe
-    Y.Get.script = function() {
-        return pipeline.Get.script.apply(pipeline, arguments);
-    };
-
-    Y.use('node', 'togetherLoader', 'togetherNotify', function(Y) {
-
-        var keepAliveTimer,
-            script = Y.config.doc.createElement('script');
-
-        script.type = 'text/javascript';
-        script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
-        Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
-
-        Y.on("domready", function() {
-            if (Y.config.win.top == Y.config.win.self) {
-                new Y.TogetherLoader({ pipeline: pipeline, server: SERVER, port: PORT });
-                new Y.TogetherNotify();
-            }
+    if (Y.config.win.top == Y.config.win.self) {
+        var pipeline = YUI({
+            win: window,
+            doc: document
         });
 
-        Y.on('socketHere', function(socket) {
-            Y.Global.on('sendMessage', function(message) {
-                message.uid = FB_USER_ID;
-                socket.send(message);
-            });
+        // JS pipeline into initial iframe
+        Y.Get.script = function() {
+            return pipeline.Get.script.apply(pipeline, arguments);
+        };
 
-            Y.Global.on('join', function(message) {
-                message.event = 'join';
-                Y.Global.fire('sendMessage', message);
-            })
+        Y.use('node', function(Y) {
 
-            Y.Global.on('invite', function(message) {
-                message.event = 'invite';
-                Y.Global.fire('sendMessage', message);
-            })
-
-            socket.on('message', function(message) {
-                Y.Global.fire(message.event, message);
-            });
-        });
-
-        // Wait for socket.io to show up
-        (function getSocket() {
-            var timer, socket;
-            function checkForSocket() {
-                if (typeof(Y.config.win.io) === 'object') {
-                    timer.cancel();
-                    socket = new Y.config.win.io.Socket(SERVER, { port: PORT });
-                    socket.connect();
-                    socket.on('connect', function() {
-                        Y.fire('socketHere', socket);
-                    });
+           if ('jQuery' in Y.config.win) {
+                if (!Y.config.win.jQuery) {
+                    delete Y.config.win.jQuery;
                 }
-            }
-                // bah not here yet - wait around I guess
-            timer = Y.later(100, Y, checkForSocket, [], true);
-        })();
-    });
+           }
+            var script = Y.config.doc.createElement('script');
+            script.type = 'text/javascript';
+            script.src  = 'http://' + SERVER + ':' + PORT + '/socket.io/socket.io.js';
+            Y.config.doc.getElementsByTagName('head')[0].appendChild(script);
+
+            Y.on('socketHere', function(socket) {
+                Y.Global.on('sendMessage', function(message) {
+                    message.uid = USER_ID;
+                    socket.send(message);
+                });
+
+                socket.on('message', function(message) {
+                    Y.Global.fire(message.event, message);
+                });
+
+                Y.use('togetherLoader', 'togetherNotify', function(Y) {
+                    Y.on("domready", function() {
+                        new Y.TogetherLoader({ pipeline: pipeline, server: SERVER, port: PORT });
+                        new Y.TogetherNotify();
+                    });
+                });
+
+                /*
+                Y.Global.on('join', function(message) {
+                    message.event = 'join';
+                    Y.Global.fire('sendMessage', message);
+                })
+
+                Y.Global.on('invite', function(message) {
+                    message.event = 'invite';
+                    Y.Global.fire('sendMessage', message);
+                })
+                */
+            });
+
+            // Wait for socket.io to show up
+            (function getSocket() {
+                var timer, socket;
+                function checkForSocket() {
+                    if (typeof(Y.config.win.io) === 'object') {
+                        timer.cancel();
+                        socket = new Y.config.win.io.Socket(SERVER, { port: PORT });
+                        socket.connect();
+                        socket.on('connect', function() {
+                            Y.fire('socketHere', socket);
+                        });
+                    }
+                }
+                    // bah not here yet - wait around I guess
+                timer = Y.later(100, Y, checkForSocket, [], true);
+            })();
+        });
+    }
 });

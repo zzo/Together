@@ -33,23 +33,56 @@ my $gzip_css    = Compress::Zlib::memGzip($css);
 # init
 my $proxy = HTTP::Proxy->new( port => 8080, host => '', max_clients => 100 );
 $proxy->push_filter(
-    mime     => 'text/html',
+#    mime     => 'text/html',
+#    request => HTTP::Proxy::BodyFilter::simple->new(
+#        sub {
+#            my ( $self, $dataref, $message, $protocol, $buffer ) = @_;
+#            print "REQUEST page is: " . $message->uri . "\n";
+#        }
+#    ),
     response => HTTP::Proxy::BodyFilter::complete->new,
     response => HTTP::Proxy::BodyFilter::simple->new(
         sub {
             my ( $self, $dataref, $message, $protocol, $buffer ) = @_;
-            my $response = $self->proxy()->response;
+            my $request = $self->proxy()->request;
+            my $response = $message;
+            return if ($request->uri =~ /toolbar\.yahoo\.com/);
+            return unless ($request->uri =~ m#^http://[^.]+\.yahoo\.(com|net)/#);
+            return if ($message->request->uri =~ /$hostname/);
             return unless ($response);
             my $ct = $response->header('content-type');
+            print "CT: $ct\n";
+            print "No data\n" unless ($$dataref);;
+            print "status: " . $message->code. "\n";
+            print "RESPONSE page  is: " . $message->request->uri . "\n";
             if ($ct =~ m#text/html#i && $$dataref) {
+                    print "Insert something!\n";
                 if ($contentEncoding eq 'gzip') {
+                        print "Insert gzip!\n";
                     $dest = Compress::Zlib::memGunzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
                     $$dataref =~ s#</head>#$css</head>#i;
-                    $$dataref = $dest . $INSERT;
+                    my $rest = $$dataref =~ s#</body>#$INSERT</body>#i;
+                    if (!$rest) {
+#                       $$dataref = $dest . $INSERT;
+                    }
                     $$dataref = Compress::Zlib::memGzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
                 } else {
-                    ${ $_[1] } =~ s#</head>#$css</head>#i;
-                    ${ $_[1] } =~ s#$#$INSERT#i;
+                        print "Insert plain!\n";
+                    $$dataref =~ s#</head>#$css</head>#i;
+#                    my $rest = $$dataref =~ s#</body>#$INSERT</body>#i;
+#                    if (!$rest) {
+#                        $rest = $$dataref =~ s#<body(.*?)>#<body$1>$INSERT#i;
+#                        if (!$rest) {
+                            $$dataref .= $INSERT;
+#                        }
+#                    }
+#                        $$dataref .= $INSERT;
+#                    if (!$rest) {
+#                        print "insert as not inserted!\n";
+#                        print $$dataref . "\n";
+#                        $$dataref .= $INSERT;
+#                    }
+                    #${ $_[1] } =~ s#$#$INSERT#i;
                 }
             }
         }
@@ -57,7 +90,7 @@ $proxy->push_filter(
 );
 
 my $filter = HTTP::Proxy::HeaderFilter::simple->new(
-    sub { 
+    sub {
             if ($_[1]->header('content-type') =~ m#text/html#i &&  $_[1]->header('content-encoding') =~ /gzip/) {
                 $_[1]->header('content-length', $_[1]->header('content-length') + length($gzip) + length($gzip_css));
                 $contentEncoding = 'gzip';
