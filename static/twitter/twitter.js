@@ -14,7 +14,20 @@ YUI().add('twitterTable', function(Y) {
         this.sizeParent();
 
         function tweet(o) {
-            return o.record.getValue("message");
+            var tweet = o.record.getValue("text"),
+                urlRegex = /https?:\/\/.+?(\s|$)/g, // matches \s OR $ at the end...
+                matches = tweet.match(urlRegex);
+
+            if (matches) {
+                for (var i = 0, len = matches.length; i < len; i++) {
+                    Y.log(matches[i]);
+                    matches[i].replace(/\)$/, '');
+                    var rr = new RegExp('(' + matches[i] + ')');
+                    var handler = "window.open('" + matches[i] + "', 'Twitter Link', 'scrollbars=yes,width=500,height=300,top=200,left=200'); return false;";
+                    tweet = tweet.replace(rr, '<a onclick="' + handler + '" href="javascript:void(0)">$1</a>');
+                }
+            }
+            return tweet;
         }
 
         function from(o) {
@@ -34,7 +47,8 @@ YUI().add('twitterTable', function(Y) {
                 key: "text",
                 label: "Tweet",
                 sortable: true,
-                abbr: "Tweet"
+                abbr: "Tweet",
+                formatter: tweet
             },
             {
                 key: "created_at",
@@ -56,7 +70,6 @@ YUI().add('twitterTable', function(Y) {
 
         Y.Global.on('twitter.homeTimeline', function(message) {
             var i = 0, countChanged = false;
-                Y.log(message);
             for (var i = 0; i < message.tweets.length; i++) {
                 var tweet = message.tweets[i],
                     record = _this.idTable[tweet.uid];
@@ -126,8 +139,12 @@ YUI().add('twitter', function(Y) {
         this.getHomeTimeline();
 
         Y.Global.on('twitter.homeTimeline', function(message) {
-            Y.log('TWITTER: ');
-            Y.log(message);
+            if (message.first) {
+                // Check status every statusTime seconds after we got the initial set
+                if (!_this.statusLoop) {
+                    _this.statusLoop = Y.later(statusTime * 1000, _this, _this.getHomeTimeline, false, true);
+                }
+            }
         });
     };
 

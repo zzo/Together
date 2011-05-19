@@ -13,49 +13,34 @@ YUI().add('facebookTable', function(Y) {
 
         this.sizeParent();
 
-        function location(o) {
-            return o.record.getValue("title");
-        }
-
-        function join(o) {
-            var uid =  o.record.getValue("uid"),
-                name =  o.record.getValue("name");
-            return '<button action="join" fullname="' + name + '" uid="' + uid + '">JOIN</button>';
-        }
-
-        function invite(o) {
-            var uid =  o.record.getValue("uid"),
-                name =  o.record.getValue("name");
-            return '<button action="invite" fullname="' + name + '" uid="' + uid + '">INVITE</button>';
-        }
-
         function name(o) {
-            var status = o.record.getValue('status'),
-                from = status.from.name;
-            if (status.to) {
-                from = status.to.data[0].name;
+            var from = o.record.getValue('from').name,
+                to   = o.record.getValue('to');
+            if (to) {
+                from = to.data[0].name;
             }
 
             return from;
         }
 
         function status(o) {
-            var status = o.record.getValue('status'),
-                message = status.message, action_line = '',
-                from = status.from.name;
+            var message = o.record.getValue('message'),
+                from    = o.record.getValue('from'),
+                to      = o.record.getValue('to'),
+                actions = o.record.getValue('actions'),
+                action_line = '';
 
-            if (status.to) {
-                from = status.to.data[0].name;
+            if (to) {
+                from = to.data[0].name;
             }
 
 
-            for (var i = 0; i < status.actions.length; i++) {
-                var action = status.actions[i];
+            for (var i = 0; i < actions.length; i++) {
+                var action = actions[i];
                 action_line += '<a onclick="window.open(' + "'" + action.link + "'" + ", '" + action.name + "'" + ', ' + "'scrollbars=yes,width=500,height=300,top=200,left=200,width=500,height=300'" + '); return false;" href="javascript:void(0)">' + action.name + '</a>';
                 action_line += '&nbsp;&nbsp;';
             }
             return '<div><div>' + message + '</div>' + '<div font="-1">' + action_line + '</div></div>';
-
         }
 
         var cols = [
@@ -95,8 +80,29 @@ YUI().add('facebookTable', function(Y) {
         }, '.yui3-datatable', 'button');
         */
 
+        Y.Global.on('facebook.allStatus', function(message) {
+            for (var i = 0; i < message.statuses.length; i++) {
+                var status = message.statuses[i],
+                    uid    = status.id.split('_', 1),
+                    added = false;
+
+                var record = _this.uidTable[uid];
+                if (!record) {
+                    _this.recordset.add(status);
+                    added = true;
+                } else {
+                    record.set('data', status);
+                }
+            }
+
+            _this.friendTable.set('recordset', _this.recordset);
+            if (added) {
+                Y.Global.fire('updateFriendCount', _this.recordset.getLength());
+            }
+        });
+
+        /*
         Y.Global.on('facebook.status', function(message) {
-                Y.log(message);
             var record = _this.uidTable[message.uid];
             if (!record) {
                 _this.recordset.add(message);
@@ -107,6 +113,7 @@ YUI().add('facebookTable', function(Y) {
                 _this.friendTable.set('recordset', _this.recordset);
             }
         });
+        */
 
         Y.Global.on('toggleFriendsPanel', function(message) {
             if (_this.hidden) {
@@ -160,27 +167,15 @@ YUI().add('facebook', function(Y) {
         this.getFriends();
 
         Y.Global.on('facebook.friends', function(message) {
-            Y.log('FB FRIENDS: ');
-            Y.log(message);
             Y.each(message.friends.data, function(friend) {
                 _this.friends[friend.id] = friend;
                 _this.friends[friend.id].profile_messages = [];
             });
-//            _this.getAllStatus(true);
+            _this.getAllStatus(true);
         });
 
-        Y.Global.on('facebook.status', function(message) {
-//               Y.Global.fire('facebook.gotStatus', message);
-            if (!message.first) {
-            /*
-                var from = message.status.from.name;
-                if (message.status.to) {
-                    from = message.status.to.data[0].name;
-                }
-                */
-//                Y.Global.fire('notify', { message: 'Facebook Status Update from ' + from  + "<br />" + (message.status.message || message.status.name) });
-//                Y.Global.fire('facebook.newStatusMessage', { message: status });
-            } else {
+        Y.Global.on('facebook.allStatus', function(message) {
+            if (message.first) {
                 // Check status every statusTime seconds after we got the initial set
                 if (!_this.statusLoop) {
                     _this.statusLoop = Y.later(statusTime * 1000, _this, _this.getAllStatus, false, true);
@@ -193,10 +188,6 @@ YUI().add('facebook', function(Y) {
         getAllStatus: function(first) {
             first = first || false;
             Y.Global.fire('sendMessage', { event: 'facebook.getAllStatus', first: first });
-        },
-        getStatus: function(friend, first) {
-            first = first || false;
-            Y.Global.fire('sendMessage', { event: 'facebook.getStatus', id: friend.id, first: first });
         },
         getFriends: function() {
             Y.Global.fire('sendMessage', { event: 'facebook.getFriends' });

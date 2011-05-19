@@ -26,10 +26,44 @@ var remote_facebook = function(args) {
 
     this.messenger.on('facebook.getAllStatus', function(message) {
         var from = message.uid;
-        _this.redis.smembers('facebook.friends.' + from, function(error, friends) {
-            friends.forEach(function(friend) {
-                var fobj = JSON.parse(friend);
-                _this.messenger.emit('facebook.getStatus', { uid: from, id: fobj.id, first: message.first });
+
+        _this.messenger.get(from, 'facebook.access_token', function(token) {
+            _this.redis.smembers('facebook.friends.' + from, function(error, friends) {
+                var batch = [], allResponses = [], notPushed = 0;
+                for (var i = 0; i < friends.length; i++) {
+                    var fobj = JSON.parse(friends[i]);
+                    batch.push({ method: 'GET', relative_url: fobj.id + '/feed' })
+                    if (batch.length == 20 || i == friends.length - 1) {   // max 20 batched OR last one
+                        // ship it
+                        var postData = 'access_token=' + token + '&batch=' + JSON.stringify(batch);
+                        _this.http_request(function(data) {
+                            var resp = JSON.parse(data);
+                            for (var j = 0; j < resp.length; j++) {
+                                var statuses = JSON.parse(resp[j].body), pushed = false;
+                                for (var k = 0; statuses && statuses.data && statuses.data.length && k < statuses.data.length && !pushed; k++) {
+                                    var stat = statuses.data[k];
+                                    if (stat.type === 'status') {
+                                        var statusKey = 'facebook.status.' + stat.id.split('_', 1);
+                                        _this.redis.hset(statusKey, 'status', JSON.stringify(stat));
+                                        allResponses.push(stat);
+                                        pushed = true;
+                                    }
+                                }
+                                if (!pushed) {
+                                    notPushed++;
+                                }
+                                if (!statuses || !statuses.data) {
+                                    console.log('NO STATUSES');
+                                    console.log(resp[j]);
+                                }
+                            }
+                            if (allResponses.length == friends.length - notPushed) {
+                                _this.messenger.sendMessage(from, { event: 'facebook.allStatus', statuses: allResponses, first: message.first });
+                            }
+                        }, 'https://graph.facebook.com', 'POST', postData);
+                        batch = [];
+                    }
+                }
             });
         });
     });

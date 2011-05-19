@@ -6,6 +6,7 @@ use HTTP::Proxy::BodyFilter::complete;
 use HTTP::Proxy::HeaderFilter::simple;
 use Compress::Zlib;
 use Data::Dumper;
+use URI;
 
 my $contentEncoding;
 my $hostname = 'ps48174.dreamhostps.com:8081';
@@ -46,9 +47,13 @@ $proxy->push_filter(
             my ( $self, $dataref, $message, $protocol, $buffer ) = @_;
             my $request = $self->proxy()->request;
             my $response = $message;
-            return if ($request->uri =~ /toolbar\.yahoo\.com/);
-            return unless ($request->uri =~ m#^http://[^.]+\.yahoo\.(com|net)/#);
-            return if ($message->request->uri =~ /$hostname/);
+            $uri = URI->new($request->uri);
+            my $req_host = $uri->host;
+#            return if ($request->uri =~ /toolbar\.yahoo\.com/);
+            return if ($req_host eq 'toolbar.yahoo.com');
+#            return unless ($request->uri =~ m#^http://[^.]+\.yahoo\.(com|net)/#);
+            return unless ($req_host =~ m#yahoo\.(com|net)$#);
+            return if ($req_host eq $hostname);
             return unless ($response);
             my $ct = $response->header('content-type');
             print "CT: $ct\n";

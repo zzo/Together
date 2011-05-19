@@ -8,9 +8,9 @@ YUI().add('togetherLoader', function(Y) {
         { id: 'keepAlive', file: 'start/keepAlive.js', requires: [ 'event-custom-base' ] },
 //        { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
 //        { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
-        { id: 'notify',    file: 'ui/notify.js',          requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
+//        { id: 'notify',    file: 'ui/notify.js',          requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
         { id: 'facebook',  file: 'facebook/facebook.js',  requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Facebook', createDiv: true, iframe: true, scrolling: 'yes' },
-        { id: 'twitter',  file: 'twitter/twitter.js',  requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Twitter', createDiv: true, iframe: true, scrolling: 'yes' }
+        { id: 'twitter',  file: 'twitter/twitter.js',     requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Twitter', createDiv: true, iframe: true, scrolling: 'yes' }
 /*
         { id: 'dialogs', file: 'ui/dialogs.js', requires: [ 'overlay', 'event-custom-base' ], class: 'Dialogs', createDiv: true, iframe: true,
           css: [
