@@ -2,6 +2,8 @@ var FB_ID       = '166824393371670',
     FB_SECRET   = 'accb35fd6f8c613931f6ab0df9295d37',
     TW_KEY      = 'a0avrZUo3Zwzk9QZ6VIw',
     TW_SECRET   = 'KouP9L7mLjhJiQfUJqtlyDKL5CGvr82C1Gs6oquA',
+    YHOO_KEY    = 'dj0yJmk9YklwTG8waGF4M1kyJmQ9WVdrOU1tSk5PR1ZQTm1VbWNHbzlOalV5TWpZM05UWXkmcz1jb25zdW1lcnNlY3JldCZ4PTc1',
+    YHOO_SECRET = '7f28566b58829d0606339b025b826b7539eb7f0f',
     sys         = require('sys'),
     events      = require('events'),
     fs          = require('fs'),
@@ -28,6 +30,10 @@ var FB_ID       = '166824393371670',
         ,facebook.local_facebook({ rclient: rclient, hostname: hostname, fb_id: FB_ID, fb_secret: FB_SECRET })
         ,auth([auth.Twitter({consumerKey: TW_KEY, consumerSecret: TW_SECRET, callback: 'http://' + hostname + '/auth/twitter' })])
         ,twitter.local_twitter({ key: TW_KEY, secret: TW_SECRET, rclient: rclient, hostname: hostname })
+        /*
+        ,auth([auth.Yahoo({consumerKey: YHOO_KEY, consumerSecret: YHOO_SECRET, callback: 'http://' + hostname + '/auth/yahoo' })])
+        ,yahoo.local_yahoo({ key: YHOO_KEY, secret: YHOO_SECRET, rclient: rclient, hostname: hostname })
+        */
     ),
     io      = require('socket.io'),
     socket  = io.listen(server);
@@ -71,7 +77,7 @@ MessageServer.prototype.setUp = function() {
 
     this.server.use(Connect.router(function(app){
         app.get('/together', function(req, res) {
-            if (req.headers.referer.match(hostname)) {
+            if (req.headers.referer && req.headers.referer.match(hostname)) {
                 res.end('');
             } else if (!req.session || !req.session.user) {
                 res.end('top.location.href="http://' + hostname + '/start/login.html";', 'utf8');

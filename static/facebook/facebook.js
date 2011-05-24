@@ -4,7 +4,6 @@ YUI().add('facebookTable', function(Y) {
 
         this.height = 300;
         this.width  = 500;
-        this.followers = {};
 
         this.recordset = new Y.Recordset();
         this.recordset.plug(Y.Plugin.RecordsetIndexer);
@@ -138,7 +137,7 @@ YUI().add('facebookTable', function(Y) {
                 width   = this.width,
                 foot    = this.parentDiv,
                 bottom  = foot.get('winHeight') - 35,  // 35 is height of Tfootpanel
-                right   = foot.get('winWidth') * .94,  // Tfootpanel is 94% of width
+                right   = foot.get('winWidth') * .84,  // Tfootpanel is 94% of width
                 top     = bottom - height,
                 left    = right - width;
 

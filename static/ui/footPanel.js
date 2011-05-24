@@ -17,7 +17,22 @@ YUI().add('Tfootpanel', function(Y) {
             boxShadow: '0 0 6px #A6A6A6'
         });
 
-        this.addButton('Dashr',    'float: left; padding-left: 20px; margin-left: 20px', function() { /* Go home? */});
+        var dashr = this.addButton('Dashr',    'float: left; padding-left: 20px; margin-left: 20px', function() { /* Go home? */});
+        var ts = Y.Node.create('<input style="float: left; height: 65%; margin-left: 15px;" value="  <search>" type="text" cols="40" id="together_search" />');
+        var but = Y.Node.create('<button style="float: left" id="search_toggle">hide</button>');
+        this.node.append(ts);
+        this.node.append(but);
+        ts.on('focus', function(e) {
+            if (ts.get('value').match(/search/)) {
+                ts.set('value', '');
+            }
+        });
+        ts.on('change', function(e) {
+            Y.Global.fire('search.request', ts.get('value'));
+        });
+        but.on('click', function(e) {
+            Y.Global.fire('search.toggleView', but);
+        });
         this.addButton('Twitter', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleTwitterPanel'); });
         this.addButton('Facebook', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleFriendsPanel'); });
     };
@@ -31,6 +46,8 @@ YUI().add('Tfootpanel', function(Y) {
                 this.node.append(button);
                 button.on('click', cb);
             }
+
+            return Y.one('#' + id);
         }
     };
 

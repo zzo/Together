@@ -21,7 +21,7 @@ YUI().add('twitterTable', function(Y) {
             if (matches) {
                 for (var i = 0, len = matches.length; i < len; i++) {
                     Y.log(matches[i]);
-                    matches[i].replace(/\)$/, '');
+                    matches[i].replace(/\)/g, '\\)');
                     var rr = new RegExp('(' + matches[i] + ')');
                     var handler = "window.open('" + matches[i] + "', 'Twitter Link', 'scrollbars=yes,width=500,height=300,top=200,left=200'); return false;";
                     tweet = tweet.replace(rr, '<a onclick="' + handler + '" href="javascript:void(0)">$1</a>');
