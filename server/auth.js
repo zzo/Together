@@ -10,7 +10,7 @@ var authCheck = function(rclient, hostname) {
         console.log(url);
 
         // Auth callback
-        if (url.pathname == "/fbCB" || url.pathname.match(/^\/auth\//)) {
+        if (url.pathname.match(/^\/auth\//)) {
             console.log('Auth CALLBACK continuing...');
             next();
             return;
@@ -18,7 +18,7 @@ var authCheck = function(rclient, hostname) {
             req.session.destroy();
             res.end('see ya later!');
             return;
-        } if (req.session && req.session.user) {
+        } if (req.session && req.session.user || (url.pathname == '/together')) {
             next(); // stop here and pass to the next onion ring of connect
             return;
         } else if (url.pathname == '/login') {

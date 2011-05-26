@@ -21,7 +21,9 @@ YUI().add('Tfootpanel', function(Y) {
         var ts = Y.Node.create('<input style="float: left; height: 65%; margin-left: 15px;" value="  <search>" type="text" cols="40" id="together_search" />');
         var but = Y.Node.create('<button style="float: left" id="search_toggle">hide</button>');
         this.node.append(ts);
+        /*
         this.node.append(but);
+        */
         ts.on('focus', function(e) {
             if (ts.get('value').match(/search/)) {
                 ts.set('value', '');

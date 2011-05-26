@@ -9,19 +9,19 @@ YUI().add('togetherLoader', function(Y) {
 //        { id: 'eventing-leader',    file: 'eventing/eventing-leader.js',    requires: [ 'json', 'selector-css3', 'event-delegate', 'event-custom-base' ] },
 //        { id: 'eventing-follower',  file: 'eventing/eventing-follower.js',  requires: [ 'json', 'selector-css3', 'node-event-simulate', 'async-queue', 'event-custom-base'] },
 //        { id: 'notify',    file: 'ui/notify.js',          requires: [ 'event-custom-base', 'gallery-notify' ], createDiv: true, class: 'TNotify' },
-        { id: 'facebook',  file: 'facebook/facebook.js', requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Facebook', createDiv: true, iframe: true, scrolling: 'yes',
+        { id: 'facebook',  file: 'facebook/facebook.js', requires: [ 'baseTable' ], class: 'Facebook', createDiv: true, iframe: true,
           css: [
-            'http://yui.yahooapis.com/combo?3.3.0/build/datatable/assets/skins/sam/datatable.css'
+            'http://yui.yahooapis.com/combo?3.3.0/build/datatable/assets/skins/sam/datatable.css&3.3.0/build/widget/assets/skins/sam/widget.css'
           ]
         },
-        { id: 'twitter',  file: 'twitter/twitter.js', requires: [ 'node', 'json', 'event-custom-base', 'recordset-base', 'datatable', 'recordset-indexer', 'event-delegate' ], class: 'Twitter', createDiv: true, iframe: true, scrolling: 'yes',
+        { id: 'twitter',  file: 'twitter/twitter.js', requires: [ 'baseTable' ], class: 'Twitter', createDiv: true, iframe: true,
           css: [
-            'http://yui.yahooapis.com/combo?3.3.0/build/datatable/assets/skins/sam/datatable.css'
+            'http://yui.yahooapis.com/combo?3.3.0/build/datatable/assets/skins/sam/datatable.css&3.3.0/build/widget/assets/skins/sam/widget.css'
           ]
         },
-        { id: 'search',  file: 'search/bing.js', requires: [ 'node', 'json-parse', 'event-custom-base',  'io-base', 'querystring-stringify-simple', 'recordset-base', 'datatable', 'recordset-indexer' ], class: 'Search', createDiv: true, scrolling: 'yes', iframe: true,
+        { id: 'search',  file: 'search/bing.js', requires: [ 'baseTable' ], class: 'Search', createDiv: true, iframe: true,
           css: [
-            'http://yui.yahooapis.com/combo?3.3.0/build/datatable/assets/skins/sam/datatable.css'
+            'http://yui.yahooapis.com/combo?3.3.0/build/datatable/assets/skins/sam/datatable.css&3.3.0/build/widget/assets/skins/sam/widget.css'
           ]
         }
 /*
@@ -38,7 +38,7 @@ YUI().add('togetherLoader', function(Y) {
         this.PORT   = config.port;
 
         function createSandbox(node, css, modules) {
-            var iframe = Y.Node.create('<iframe style="background: red;" width="100%" height="100%"  border="0" frameBorder="0" marginWidth="0" marginHeight="0" leftMargin="0" topMargin="0" allowTransparency="true"></iframe>'),
+            var iframe = Y.Node.create('<iframe style="background: lightblue;" width="100%" height="300px"  border="0" frameBorder="0" marginWidth="0" marginHeight="0" leftMargin="0" topMargin="0" allowTransparency="true"></iframe>'),
                 DEFAULT_CSS = '',
                 BODY= '<body class="yui3-skin-sam"><br></body>',
                 META = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>',
@@ -99,13 +99,13 @@ YUI().add('togetherLoader', function(Y) {
             var myY = YUI, node;
 
             if (module.createDiv) {
-                var ret = Y.one('body').append('<div style="border: 2px solid black" id="' + module.id + '"></div>');
-                node = Y.one('#' + module.id);
+                var ret = Y.one('body').append('<div style="border: 2px solid black" id="dashr_' + module.id + '"></div>');
+                node = Y.one('#dashr_' + module.id);
             }
 
             if (module.iframe) {
                 // Create an irame sandbox for this module
-                var obj = createSandbox(Y.one('#' + module.id), module.css, hash);
+                var obj = createSandbox(Y.one('#dashr_' + module.id), module.css, hash);
                 myY = obj.yui;
                 if (module.scrolling) {
                     obj.iframe.setAttribute('scrolling', module.scrolling);
@@ -119,7 +119,6 @@ YUI().add('togetherLoader', function(Y) {
                 // Just load it up here
                 //
                 myY({ modules: hash, win: window, doc: document }).use(module.id, function(Y) {
-                    Y.log('LOADED MODULE: ' + module.id);
                     if (Y[module.class]) {
                         new Y[module.class](node);
                     }

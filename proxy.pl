@@ -49,21 +49,18 @@ $proxy->push_filter(
             my $response = $message;
             $uri = URI->new($request->uri);
             my $req_host = $uri->host;
-#            return if ($request->uri =~ /toolbar\.yahoo\.com/);
             return if ($req_host eq 'toolbar.yahoo.com');
-#            return unless ($request->uri =~ m#^http://[^.]+\.yahoo\.(com|net)/#);
-            return unless ($req_host =~ m#yahoo\.(com|net)$#);
-            return if ($req_host eq $hostname);
+#            return unless ($req_host =~ m#yahoo\.(com|net)$#);
+            return if ($req_host =~ /$hostname/);
             return unless ($response);
             my $ct = $response->header('content-type');
-            print "CT: $ct\n";
-            print "No data\n" unless ($$dataref);;
-            print "status: " . $message->code. "\n";
-            print "RESPONSE page  is: " . $message->request->uri . "\n";
+#            print "CT: $ct\n";
+#            print "No data\n" unless ($$dataref);;
+#            print "status: " . $message->code. "\n";
+#            print "RESPONSE page  is: " . $message->request->uri . "\n";
+
             if ($ct =~ m#text/html#i && $$dataref) {
-                    print "Insert something!\n";
                 if ($contentEncoding eq 'gzip') {
-                        print "Insert gzip!\n";
                     $dest = Compress::Zlib::memGunzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
                     $$dataref =~ s#</head>#$css</head>#i;
                     my $rest = $$dataref =~ s#</body>#$INSERT</body>#i;

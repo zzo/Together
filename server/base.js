@@ -77,6 +77,13 @@ MessageServer.prototype.setUp = function() {
 
     this.server.use(Connect.router(function(app){
         app.get('/together', function(req, res) {
+            //var url = req.urlp = urlparser.parse(req.url, true);
+            /*
+            console.log('referer');
+            console.log(req.headers.referer);
+            console.log('----');
+            console.log(req);
+            */
             if (req.headers.referer && req.headers.referer.match(hostname)) {
                 res.end('');
             } else if (!req.session || !req.session.user) {

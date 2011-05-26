@@ -2,10 +2,11 @@
 var SERVER     = 'ps48174.dreamhostps.com',
     PORT       = 8081,
     yconfig = { 
-        gallery: 'gallery-2011.03.11-23-49',
+//        gallery: 'gallery-2011.03.11-23-49',
         modules: {
             togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/start/loader.js' },
-            togetherNotify: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/notify.js', requires: [ 'event-custom-base', 'gallery-notify', 'gallery-dialog', 'gallery-button' ] }
+//            togetherNotify: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/notify.js', requires: [ 'event-custom-base', 'gallery-notify', 'gallery-dialog', 'gallery-button' ] },
+            baseTable: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/baseTable.js', requires: [ 'node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base' ] }
         }
     };
 
@@ -43,24 +44,11 @@ YUI(yconfig).use('yui', function(Y) {
                     Y.Global.fire(message.event, message);
                 });
 
-                Y.use('togetherLoader', 'togetherNotify', function(Y) {
+                Y.use('togetherLoader', 'baseTable', function(Y) {
                     Y.on("domready", function() {
                         new Y.TogetherLoader({ pipeline: pipeline, server: SERVER, port: PORT });
-                        new Y.TogetherNotify();
                     });
                 });
-
-                /*
-                Y.Global.on('join', function(message) {
-                    message.event = 'join';
-                    Y.Global.fire('sendMessage', message);
-                })
-
-                Y.Global.on('invite', function(message) {
-                    message.event = 'invite';
-                    Y.Global.fire('sendMessage', message);
-                })
-                */
             });
 
             // Wait for socket.io to show up

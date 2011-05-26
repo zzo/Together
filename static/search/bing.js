@@ -1,48 +1,27 @@
 YUI().add('searchTable', function(Y) {
     function st(parentDiv) {
-        var _this = this;
+        var result = function(o) {
+                var description   = o.record.getValue('description'),
+                    displayURL    = o.record.getValue('displayURL'),
+                    title         = o.record.getValue('title'),
+                    url           = o.record.getValue('url'),
+                    handler = "window.open('" + url + "', '" + title + "', 'scrollbars=yes,width=500,height=300,top=200,left=200'); return false;",
+                    href    = '<a href="javascript:void(0)" onclick="' + handler + '">';
+                    row = '<h4>' + href +  title + '</a></h4>';
 
-        this.height = 300;
-        this.width  = 500;
-
-        this.recordset = new Y.Recordset();
-        this.recordset.plug(Y.Plugin.RecordsetIndexer);
-        this.parentDiv = parentDiv;
-
-        this.sizeParent();
-
-        function result(o) {
-            var description   = o.record.getValue('description'),
-                displayURL    = o.record.getValue('displayURL'),
-                title         = o.record.getValue('title'),
-                url           = o.record.getValue('url'),
-                handler = "window.open('" + url + "', '" + title + "', 'scrollbars=yes,width=500,height=300,top=200,left=200'); return false;",
-                href    = '<a href="javascript:void(0)" onclick="' + handler + '">';
-                row = '<h4>' + href +  title + '</a></h4>';
-
-            if (description) {
-                row += '<h5>' + description + '</h5>';
-            }
-            row += href + displayURL + '</a>';
-            return row;
-        }
-
-        var cols = [
+                if (description) {
+                    row += '<h5>' + description + '</h5>';
+                }
+                row += href + displayURL + '</a>';
+                return row;
+            },
+        cols = [
             {
-                key: "results",
+                key: "Search Results",
                 sortable: false,
                 formatter: result
             }
-        ];
-
-        this.searchTable = new Y.DataTable.Base({
-            columnset: cols,
-            width: this.width
-        });
-
-        // body in the iframe
-        this.hide();
-        this.searchTable.render(Y.one('body'));
+        ], _this = this;
 
         Y.Global.on('search.results', function(message) {
             _this.recordset.empty();
@@ -50,56 +29,20 @@ YUI().add('searchTable', function(Y) {
                 _this.recordset.add(message.results[i]);
             }
 
-            _this.searchTable.set('recordset', _this.recordset);
-            _this.searchTable.set('caption', 'Search results for "' + message.query + '"');
+            _this.table.set('recordset', _this.recordset);
+            _this.table.set('caption', 'Search results for "' + message.query + '"');
             Y.Global.fire('updateSearchCount', _this.recordset.getLength());
-            _this.show();
+
+            _this.display();
         });
 
-        Y.Global.on('search.toggleView', function(button) {
-            if (_this.hidden) {
-                _this.show();
-                button.set('innerHTML', 'hide');
-            } else {
-                _this.hide();
-                button.set('innerHTML', 'show');
-            }
-        });
-    };
-
-    st.prototype = {
-        show : function() {
-            this.parentDiv.show();
-            this.hidden = false;
-        },
-        hide : function () {
-            this.parentDiv.hide();
-            this.hidden = true;
-        },
-        sizeParent: function() {
-            var height  = this.height, 
-                width   = this.width,
-                foot    = this.parentDiv,
-                bottom  = foot.get('winHeight') - 35,  // 35 is height of Tfootpanel
-                right   = foot.get('winWidth') * .45,  // Tfootpanel is 5% of width
-                top     = bottom - height,
-                left    = right - width;
-
-            this.parentDiv.setStyles({
-                position:   'fixed',
-                height:     height,
-                width:      width,
-                bottom:     bottom,
-                right:      right,
-                top:        top,
-                left:       left,
-                zIndex:     9999
-            });
-        }
+        st.superclass.constructor.call(this, { parentDiv: parentDiv, toggleEvent: 'search.toggleView', buttonOffset: .45, cols: cols });
     };
 
     Y.SearchTable = st;
-}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'event-delegate' ]});
+    Y.extend(Y.SearchTable, Y.BaseTable);
+
+}, '1.0', { requires: ['baseTable']});
 
 YUI().add('search', function(Y) {
     var appId = '677AFDF314A3AF72FD68BFA84DF2922547E17F5C';
@@ -133,12 +76,9 @@ YUI().add('search', function(Y) {
             }
 
             Y.Global.fire('search.results', normalizedResults);
-
-            Y.log('search results');
-            Y.log(results);
         }
     };
 
     Y.Search = search;
-}, '1.0', { requires: [ 'node', 'json-parse', 'io-base', 'querystring-stringify-simple', 'searchTable' ]});
+}, '1.0', { requires: [ 'searchTable' ]});
 
