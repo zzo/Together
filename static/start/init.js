@@ -6,7 +6,7 @@ var SERVER     = 'ps48174.dreamhostps.com',
         modules: {
             togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/start/loader.js' },
 //            togetherNotify: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/notify.js', requires: [ 'event-custom-base', 'gallery-notify', 'gallery-dialog', 'gallery-button' ] },
-            baseTable: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/baseTable.js', requires: [ 'node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base' ] }
+            baseTable: { fullpath: 'http://' + SERVER + ':' + PORT + '/ui/baseTable.js', requires: [ 'node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'dd-drag' ] }
         }
     };
 

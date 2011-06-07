@@ -36,7 +36,7 @@ YUI().add('Tfootpanel', function(Y) {
             Y.Global.fire('search.toggleView', but);
         });
         this.addButton('Twitter', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleTwitterPanel'); });
-        this.addButton('Facebook', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleFriendsPanel'); });
+        this.addButton('Facebook', 'float: right; padding-right: 20px; margin-right: 20px', function() { Y.Global.fire('toggleFacebookPanel'); });
     };
 
 

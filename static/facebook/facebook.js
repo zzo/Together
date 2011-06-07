@@ -74,7 +74,7 @@ YUI().add('facebookTable', function(Y) {
             }
         });
 
-        ft.superclass.constructor.call(this, { parentDiv: parentDiv, toggleEvent: 'search.toggleFriendsPanel', buttonOffset: .84, cols: cols });
+        ft.superclass.constructor.call(this, { parentDiv: parentDiv, toggleEvent: 'toggleFacebookPanel', buttonOffset: .84, cols: cols });
         this.recordset.plug(Y.Plugin.RecordsetIndexer);
         this.uidTable = this.recordset.indexer.createTable('uid');
     };

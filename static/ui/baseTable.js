@@ -3,6 +3,7 @@ YUI().add('baseTable', function(Y) {
     var bt = function(args) {
         var _this = this;
 
+        this.rendered     = false;
         this.parentDiv    = args.parentDiv;
         this.buttonOffset = args.buttonOffset;
 
@@ -25,6 +26,7 @@ YUI().add('baseTable', function(Y) {
 
         Y.Global.on(args.toggleEvent, function() {
             if (_this.hidden) {
+                _this.display();
                 _this.show();
             } else {
                 _this.hide();
@@ -66,10 +68,14 @@ YUI().add('baseTable', function(Y) {
                 height: this.height - 20,
                 width:  this.width
             });
+            this.table.plug(Y.Plugin.DataTableSort);
+
             this.table.render(Y.one('body'));
+//            new Y.DD.Drag({ node: 'body' });
             this.show();
+            this.rendered = true;
         }
     };
 
     Y.BaseTable = bt;
-}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base' ]});
+}, '1.0', { requires: ['node', 'recordset-base', 'datatable', 'recordset-indexer', 'event-custom-base', 'dd-drag' ]});
