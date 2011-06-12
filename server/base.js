@@ -36,7 +36,13 @@ var FB_ID       = '166824393371670',
         */
     ),
     io      = require('socket.io'),
-    socket  = io.listen(server);
+    socket  = io.listen(server),
+    nxb     = require('node-xmpp-bosh'),
+    bosh_server = nxb.start({
+//        logging: "DEBUG",
+        port: 5280,
+        no_tls_domains: [ 'chat.facebook.com' ]
+    });
 
 var MessageServer = function(args) {
     events.EventEmitter.call(this);

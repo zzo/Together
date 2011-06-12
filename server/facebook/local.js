@@ -1,5 +1,7 @@
 var urlparser   = require('url'),
     https       = require('https'),
+    http        = require('http'),
+    net         = require('net'),
     qs          = require('querystring'),
     auth        = require('connect-auth'),
     OAuth       = require('oauth').OAuth;
@@ -22,9 +24,11 @@ var facebook = function(args) {
           res.end('<html>\
               <head>                                             \n\
                 <title>Link With Facebook</title> \n\
-                <script src="http://static.ak.fbcdn.net/connect/en_US/core.js"></script> \n\
+<script src="http://connect.facebook.net/en_US/all.js"></script>\
               </head>                                            \n\
               <body>                                             \n\
+              <div id="fb-root"></div>\
+                  <a href="https://www.facebook.com/dialog/oauth?client_id=166824393371670&redirect_uri=http://dashr.net:8081/auth/facebook&scope=xmpp_login,email">CLICK</a> \
                 <div id="wrapper">                               \n\
                   <h1>Not authenticated</h1>                     \n\
                   <div class="fb_button" id="fb-login" style="float:left; background-position: left -188px">          \n\
@@ -35,8 +39,31 @@ var facebook = function(args) {
                     </a>                                         \n\
                   </div>                                         \n\
                 </div>                                           \n\
+                <script>\
+  FB.init({ appId  : "166824393371670", status: true });\
+                FB.getLoginStatus(function(response) {\
+                    console.log("RESP: ");console.log(response); });\
+            </script>\
               </body>                                            \n\
             </html>');
+        } else if (url.pathname == '/fbchat') {
+            // proxy these connections to localhost:5280
+            req.on('data', function(chunk) {
+                var options = {
+                    host: 'localhost',
+                    port: 5280,
+                    path: '/http-bind/',
+                    method: 'POST'
+                },
+                fb_req = http.request(options, function(fb_res) {
+                    fb_res.on('data', function(fb_data) {
+                        res.end(fb_data.toString());
+                    });
+                });
+
+                fb_req.end(chunk.toString());
+            });
+
         } else {
             next();
         }
