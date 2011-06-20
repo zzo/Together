@@ -19,7 +19,8 @@ var urlparser   = require('url'),
 
                     args.rclient.hset(req.session.user, 'twitter.oath_token', req.getAuthDetails()["twitter_oauth_token"]);
                     args.rclient.hset(req.session.user, 'twitter.oath_token_secret', req.getAuthDetails()["twitter_oauth_token_secret"]);
-                    res.end("<html><h1>Twitter authentication succeeded :) </h1></html>")
+                          res.writeHead(302, { 'Location': 'http://dashr.net:8081/dashr/index.html' });
+                          res.end();
                 } else {
                     res.end("<html><h1>Twitter authentication failed :( </h1></html>")
                     return;
@@ -34,7 +35,8 @@ var urlparser   = require('url'),
                 <div id="wrapper">                               \n\
               <div style="float:left;margin-left:5px">       \n\
                 <a href="/auth/twitter" style="border:0px">  \n\
-                  <img style="border:0px" src="http://apiwiki.twitter.com/f/1242697715/Sign-in-with-Twitter-darker.png"/>\n\
+                  <img style="border:0px; width: 100px; height: 100px" src="/twitter.jpg"/>\n\
+                  CLIK TO LINK WITH TWITTER \n\
                 </a>                                         \n\
               </div>\n\
                 </div>                                           \n\

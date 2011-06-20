@@ -28,10 +28,12 @@ var remote_facebook = function(args) {
         var from = message.uid;
 
         _this.messenger.get(from, 'facebook.access_token', function(token) {
+            console.log('token: ' + token);
             _this.redis.smembers('facebook.friends.' + from, function(error, friends) {
                 var batch = [], allResponses = [], notPushed = 0;
                 for (var i = 0; i < friends.length; i++) {
                     var fobj = JSON.parse(friends[i]);
+            console.log('friend OBJ: ' + fobj);
                     batch.push({ method: 'GET', relative_url: fobj.id + '/feed' })
                     if (batch.length == 20 || i == friends.length - 1) {   // max 20 batched OR last one
                         // ship it
@@ -129,6 +131,8 @@ remote_facebook.prototype = {
         }
         method = method || 'GET';
 
+        console.log('http_request:' + url);
+
         var options = {
             host: url_data.hostname,
             port: port,
@@ -153,6 +157,8 @@ remote_facebook.prototype = {
                 data += d;
             });
             res.on('end', function() {
+
+        console.log('http_request done' + data);
                 cb(data);
             });
         });

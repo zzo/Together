@@ -8,7 +8,7 @@ var FB_ID       = '166824393371670',
     events      = require('events'),
     fs          = require('fs'),
     querystring = require('querystring'),
-    hostname    = 'ps48174.dreamhostps.com:8081';
+    hostname    = 'dashr.net:8081';
     Connect     = require('connect'),
     RedisStore  = require('connect-redis'),
     redis       = new RedisStore(),
@@ -93,7 +93,8 @@ MessageServer.prototype.setUp = function() {
             if (req.headers.referer && req.headers.referer.match(hostname)) {
                 res.end('');
             } else if (!req.session || !req.session.user) {
-                res.end('top.location.href="http://' + hostname + '/start/login.html";', 'utf8');
+                //res.end('top.location.href="http://' + hostname + '/start/login.html";', 'utf8');
+                res.end('top.location.href="http://' + hostname + '/dashr/index.html";', 'utf8');
             } else {
                 res.write('var USER_ID = "' + req.session.user + '";', 'utf8');
                 var tracker_js = fs.createReadStream('../static/start/init.js');

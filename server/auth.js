@@ -6,8 +6,8 @@ var authCheck = function(rclient, hostname) {
     return function(req, res, next) {
         var url = req.urlp = urlparser.parse(req.url, true);
 
-        console.log('AUTH PATH:');
-        console.log(url);
+        console.log('AUTH');
+        console.log(url.pathname);
 
         // Auth callback
         if (url.pathname.match(/^\/auth\//)) {
@@ -18,30 +18,37 @@ var authCheck = function(rclient, hostname) {
             req.session.destroy();
             res.end('see ya later!');
             return;
-        } if (req.session && req.session.user || (url.pathname == '/together')) {
+        } else if (url.pathname == '/amiloggedin') {
+            if (req.session && req.session.user) {
+                // yep
+                res.writeHead(204);
+            } else {
+                // nope
+                res.writeHead(403);
+            }
+            res.end();
+            return;
+        } else if (req.session && req.session.user || (url.pathname == '/together')) {
             next(); // stop here and pass to the next onion ring of connect
             return;
-        } else if (url.pathname == '/login') {
+        } else if (url.pathname == '/login' || url.pathname == '/ajax-login') {
             var d = '';
             req.on('data', function(chunk) {
                 d += chunk;
             });
             req.on('end', function() {
                 var obj = qs.parse(d);
-                console.log('posted to login');
-                console.log(obj);
                 rclient.hgetall(obj.user, function(error, user_obj) {
-                    if (user_obj && user_obj.password === obj.pass) {
+                    if (user_obj && user_obj.password === obj.password) {
                         req.session.user = obj.user;
-//                        req.session.auth = true;
-                        res.end('thanks for signing in - go surf the web!');
-                        return;
+                        res.end(JSON.stringify({ success: true }));
                     } else {
-                        fail('username/password incorrect');
+                        res.end(JSON.stringify({ success: false, errors: { user: 'Username incorrect', password: 'Password incorrect' } }));
                     }
+                    return;
                 });
             });
-        } else if (url.pathname == '/register') {
+        } else if (url.pathname == '/ajax-register') {
             var d = '';
             req.on('data', function(chunk) {
                 d += chunk;
@@ -50,12 +57,12 @@ var authCheck = function(rclient, hostname) {
                 var obj = qs.parse(d);
                 rclient.keys(obj.user, function(error, key) {
                     if (key.length) {
-                        fail('username already exists');
+                        res.end(JSON.stringify({ success: false, errors: { user: 'Username already exists' } }));
                     } else {
-                        rclient.hset(obj.user, 'password', obj.pass);
-                        fail();
+                        rclient.hset(obj.user, 'password', obj.password);
+                        res.end(JSON.stringify({ success: true }));
                     }
-
+                    return;
                 });
             });
        /* } else if (url.pathname !== '/start/login.html' && (!req.session || !req.session.user)) {

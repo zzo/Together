@@ -70,6 +70,9 @@ YUI().add('twitterTable', function(Y) {
                 Y.Global.fire('updateTweetCount', _this.recordset.getLength());
             }
             _this.table.set('recordset', _this.recordset);
+            //Y.one('#together_Twitter').removeAttribute('disabled');
+            Y.Global.fire('twitter_activate');
+//            Y.log('foot panel: ' + Y.FootPanel);
         });
 
         tw.superclass.constructor.call(this, { parentDiv: parentDiv, toggleEvent: 'toggleTwitterPanel', buttonOffset: .94, cols: cols });
@@ -78,7 +81,7 @@ YUI().add('twitterTable', function(Y) {
     Y.TwitterTable = tw;
     Y.extend(Y.TwitterTable, Y.BaseTable);
 
-}, '1.0', { requires: ['baseTable' ]});
+}, '1.0', { requires: [ 'baseTable' ]});
 
 YUI().add('twitter', function(Y) {
 

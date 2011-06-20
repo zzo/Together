@@ -1,7 +1,7 @@
 /*jslint plusplus: false */
-var SERVER     = 'ps48174.dreamhostps.com',
+var SERVER     = 'dashr.net',
     PORT       = 8081,
-    yconfig = { 
+    yconfig = {
 //        gallery: 'gallery-2011.03.11-23-49',
         modules: {
             togetherLoader: { fullpath: 'http://' + SERVER + ':' + PORT + '/start/loader.js' },

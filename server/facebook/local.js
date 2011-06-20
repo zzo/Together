@@ -14,7 +14,10 @@ var facebook = function(args) {
             req.authenticate(['facebook'], function(error, authenticated) {
                 if( authenticated ) {
                     args.rclient.hset(req.session.user, 'facebook.access_token', req.session.access_token);
-                    res.end("<html><h1>Hello Facebook user:" + JSON.stringify( req.getAuthDetails().user ) + ".</h1></html>")
+                    // Redirect back...
+//                    res.end("<html><h1>Hello Facebook user:" + JSON.stringify( req.getAuthDetails().user ) + ".</h1></html>")
+                          res.writeHead(302, { 'Location': 'http://dashr.net:8081/dashr/index.html' });
+                          res.end();
                 }
                 else {
                     res.end("<html><h1>Facebook authentication failed :( </h1></html>")
@@ -28,7 +31,6 @@ var facebook = function(args) {
               </head>                                            \n\
               <body>                                             \n\
               <div id="fb-root"></div>\
-                  <a href="https://www.facebook.com/dialog/oauth?client_id=166824393371670&redirect_uri=http://dashr.net:8081/auth/facebook&scope=xmpp_login,email">CLICK</a> \
                 <div id="wrapper">                               \n\
                   <h1>Not authenticated</h1>                     \n\
                   <div class="fb_button" id="fb-login" style="float:left; background-position: left -188px">          \n\
